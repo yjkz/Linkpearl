@@ -22,7 +22,7 @@ def main() -> int:
     repo = (
         sys.argv[3]
         if len(sys.argv) > 3
-        else os.environ.get("GITHUB_REPOSITORY", "yjkz/ChatAnywhere")
+        else os.environ.get("GITHUB_REPOSITORY", "yjkz/Linkpearl")
     )
 
     if not tag:

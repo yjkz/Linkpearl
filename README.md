@@ -3,8 +3,8 @@
   <h1>Linkpearl</h1>
   <p><strong>Real-time FFXIV chat in your browser, with an AI assistant.</strong></p>
   <p>
-    <a href="https://github.com/yjkz/ChatAnywhere/releases"><img src="https://img.shields.io/github/v/release/yjkz/ChatAnywhere" alt="Latest release"></a>
-    <a href="https://github.com/yjkz/ChatAnywhere/actions/workflows/release.yml"><img src="https://github.com/yjkz/ChatAnywhere/actions/workflows/release.yml/badge.svg" alt="Release workflow"></a>
+    <a href="https://github.com/yjkz/Linkpearl/releases"><img src="https://img.shields.io/github/v/release/yjkz/Linkpearl" alt="Latest release"></a>
+    <a href="https://github.com/yjkz/Linkpearl/actions/workflows/release.yml"><img src="https://github.com/yjkz/Linkpearl/actions/workflows/release.yml/badge.svg" alt="Release workflow"></a>
   </p>
 </div>
 
@@ -60,7 +60,7 @@ Linkpearl runs a lightweight web server inside Final Fantasy XIV. It streams you
 Linkpearl is distributed through its own plugin repository:
 
 ```
-https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/pluginmaster.json
+https://raw.githubusercontent.com/yjkz/Linkpearl/main/pluginmaster.json
 ```
 
 1. In game, run `/xlsettings` to open Dalamud settings.
