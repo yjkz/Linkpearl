@@ -255,6 +255,42 @@ internal class AiHandler
         }
     }
 
+    internal async Task HandleChat(HttpContextBase ctx)
+    {
+        if (!await _auth.RequireAuth(ctx)) return;
+
+        try
+        {
+            var body = await HttpHelper.ReadBodyAsync(ctx, 131_072);
+            if (body == null)
+            {
+                await SendError(ctx, 413, "Request body too large");
+                return;
+            }
+
+            var payload = JsonSerializer.Deserialize<AiChatPayload>(body, HttpHelper.CaseInsensitiveOptions);
+            if (payload == null || string.IsNullOrWhiteSpace(payload.Message))
+            {
+                await SendError(ctx, 400, "Message is required");
+                return;
+            }
+
+            var reply = await _ai.ChatAsync(
+                payload.AgentId,
+                payload.Message,
+                payload.ContextScopes ?? new List<string>(),
+                payload.Conversation ?? new List<Ai.AiChatTurn>(),
+                CancellationToken.None);
+
+            await SendJson(ctx, JsonSerializer.Serialize(new { reply }, JsonOptions));
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error handling POST /ai/chat");
+            await SendError(ctx, 500, ex.Message);
+        }
+    }
+
     internal async Task HandleTest(HttpContextBase ctx)
     {
         if (!await _auth.RequireAuth(ctx)) return;
@@ -334,6 +370,14 @@ internal sealed class SendSuggestionPayload
     public string Id { get; set; } = "";
     public int? Index { get; set; }
     public string? Text { get; set; }
+}
+
+internal sealed class AiChatPayload
+{
+    public string? AgentId { get; set; }
+    public string Message { get; set; } = "";
+    public List<string>? ContextScopes { get; set; }
+    public List<Ai.AiChatTurn>? Conversation { get; set; }
 }
 
 internal sealed class DismissSuggestionPayload

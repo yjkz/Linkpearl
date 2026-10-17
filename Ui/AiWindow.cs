@@ -32,6 +32,16 @@ public sealed class AiWindow : Window
     // ── Per-suggestion edit buffers (suggestion mode) ───────────────
     private readonly Dictionary<string, string> _suggestionDrafts = new();
 
+    // ── Manual conversation state ───────────────────────────────────
+    private readonly List<AiChatTurn> _chatTurns = new();
+    private readonly object _chatGate = new();
+    private readonly HashSet<string> _chatScopes = new(StringComparer.OrdinalIgnoreCase);
+    private string _chatInput = "";
+    private int _chatAgentIndex;
+    private volatile bool _chatSending;
+    private volatile string? _chatError;
+    private static readonly Vector4 ColorYellow = new(1f, 0.85f, 0.2f, 1f);
+
     private static readonly Vector4 ColorGreen = new(0.4f, 0.9f, 0.4f, 1f);
     private static readonly Vector4 ColorRed = new(0.9f, 0.4f, 0.4f, 1f);
     private static readonly Vector4 ColorMuted = new(0.6f, 0.6f, 0.6f, 1f);
@@ -68,6 +78,12 @@ public sealed class AiWindow : Window
         if (ImGui.BeginTabItem(T("ai.tab.suggestions")))
         {
             DrawSuggestionsTab();
+            ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem(T("ai.tab.chat")))
+        {
+            DrawChatTab();
             ImGui.EndTabItem();
         }
 
@@ -171,6 +187,155 @@ public sealed class AiWindow : Window
         AiReplyModes.Suggestion => T("ai.rule.mode.suggestion"),
         _ => T("ai.rule.mode.auto"),
     };
+
+    // ── Manual chat tab ─────────────────────────────────────────────
+
+    private void DrawChatTab()
+    {
+        var config = _plugin.Config;
+
+        if (!config.AiEnabled)
+            ImGui.TextColored(ColorYellow, T("ai.disabledHint"));
+
+        if (config.AiAgents.Count == 0)
+        {
+            ImGui.TextColored(ColorMuted, T("ai.noAgents"));
+            return;
+        }
+
+        _chatAgentIndex = Math.Clamp(_chatAgentIndex, 0, config.AiAgents.Count - 1);
+        var agentNames = config.AiAgents.Select(a => a.Name).ToArray();
+        ImGui.SetNextItemWidth(240 * ImGuiHelpers.GlobalScale);
+        ImGui.Combo(T("ai.chat.agent") + "##chat-agent", ref _chatAgentIndex, agentNames, agentNames.Length);
+
+        if (ImGui.CollapsingHeader(T("ai.chat.contextChannels")))
+        {
+            ImGui.TextColored(ColorMuted, T("ai.chat.categories"));
+            foreach (var (key, labelKey, _) in AiChannels.ChatContextCategories)
+            {
+                var selected = _chatScopes.Contains(key);
+                var label = UiStrings.T(config.UiLanguage, labelKey);
+                if (ImGui.Checkbox($"{label}##ctx-cat-{key}", ref selected))
+                {
+                    if (selected)
+                        _chatScopes.Add(key);
+                    else
+                        _chatScopes.Remove(key);
+                }
+            }
+
+            ImGui.Separator();
+            ImGui.TextColored(ColorMuted, T("ai.chat.channels"));
+
+            foreach (var (key, labelKey, _) in AiChannels.ChatContextChannels)
+            {
+                var selected = _chatScopes.Contains(key);
+                var label = UiStrings.T(config.UiLanguage, labelKey);
+                if (ImGui.Checkbox($"{label}##ctx-ch-{key}", ref selected))
+                {
+                    if (selected)
+                        _chatScopes.Add(key);
+                    else
+                        _chatScopes.Remove(key);
+                }
+            }
+
+            ImGui.TextColored(ColorMuted, T("ai.chat.contextHint"));
+            ImGui.Spacing();
+        }
+
+        var available = ImGui.GetContentRegionAvail();
+        var historyHeight = Math.Max(140, available.Y - 96);
+        if (ImGui.BeginChild("##chat-history", new Vector2(0, historyHeight)))
+        {
+            List<AiChatTurn> history;
+            lock (_chatGate)
+                history = _chatTurns.ToList();
+
+            if (history.Count == 0 && !_chatSending)
+                ImGui.TextColored(ColorMuted, T("ai.chat.empty"));
+
+            foreach (var turn in history)
+            {
+                var isUser = string.Equals(turn.Role, "user", StringComparison.OrdinalIgnoreCase);
+                ImGui.TextColored(isUser ? ColorGreen : ColorMuted,
+                    isUser ? T("ai.chat.you") : T("ai.chat.assistant"));
+                ImGui.TextWrapped(turn.Content);
+                ImGui.Separator();
+            }
+
+            if (_chatSending)
+                ImGui.TextColored(ColorYellow, T("ai.chat.thinking"));
+
+            ImGui.EndChild();
+        }
+
+        if (!string.IsNullOrEmpty(_chatError))
+            ImGui.TextColored(ColorRed, $"{T("ai.chat.error")}: {_chatError}");
+
+        ImGui.InputTextMultiline("##chat-input", ref _chatInput, 4096, new Vector2(0, 56));
+
+        using (ImRaii.Disabled(_chatSending || !config.AiEnabled || string.IsNullOrWhiteSpace(_chatInput)))
+        {
+            if (ImGui.Button(T("ai.chat.send")))
+                StartChatRequest();
+        }
+
+        ImGui.SameLine();
+
+        if (ImGui.Button(T("ai.chat.clear")))
+        {
+            lock (_chatGate)
+                _chatTurns.Clear();
+            _chatError = null;
+        }
+    }
+
+    private void StartChatRequest()
+    {
+        var message = _chatInput.Trim();
+        if (message.Length == 0 || _chatSending)
+            return;
+
+        var config = _plugin.Config;
+        if (config.AiAgents.Count == 0)
+            return;
+
+        var agent = config.AiAgents[Math.Clamp(_chatAgentIndex, 0, config.AiAgents.Count - 1)];
+        var scopes = _chatScopes.ToList();
+
+        List<AiChatTurn> history;
+        lock (_chatGate)
+        {
+            history = _chatTurns.ToList();
+            _chatTurns.Add(new AiChatTurn { Role = "user", Content = message });
+        }
+
+        _chatInput = "";
+        _chatError = null;
+        _chatSending = true;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var reply = await _plugin.Ai
+                    .ChatAsync(agent.Id, message, scopes, history, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                lock (_chatGate)
+                    _chatTurns.Add(new AiChatTurn { Role = "assistant", Content = reply });
+            }
+            catch (Exception ex)
+            {
+                _chatError = ex.Message;
+            }
+            finally
+            {
+                _chatSending = false;
+            }
+        });
+    }
 
     // ── Settings tab ────────────────────────────────────────────────
 

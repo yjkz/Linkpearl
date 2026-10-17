@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import clsx from 'clsx';
 import { Settings2, Sparkles, X } from 'lucide-react';
 import styles from './AiPanel.module.css';
+import { AiChat } from './AiChat';
 import { useAiStore } from '../../store/aiStore';
 import { useAiDataLoader } from '../../hooks/useAi';
 import { useTranslation } from '../../i18n';
@@ -108,6 +110,7 @@ export function AiPanel({ onClose, onOpenSettings }: Props) {
   useAiDataLoader(true);
 
   const { t } = useTranslation();
+  const [tab, setTab] = useState<'suggestions' | 'chat'>('suggestions');
   const settings = useAiStore((s) => s.settings);
   const suggestions = useAiStore((s) => s.suggestions);
   const activity = useAiStore((s) => s.activity);
@@ -154,52 +157,75 @@ export function AiPanel({ onClose, onOpenSettings }: Props) {
           </div>
         </header>
 
+        <div className={styles.tabs}>
+          <button
+            type="button"
+            className={clsx(styles.tab, tab === 'suggestions' && styles.tabActive)}
+            onClick={() => setTab('suggestions')}
+          >
+            {t('ai.tab.suggestions')}
+          </button>
+          <button
+            type="button"
+            className={clsx(styles.tab, tab === 'chat' && styles.tabActive)}
+            onClick={() => setTab('chat')}
+          >
+            {t('ai.tab.chat')}
+          </button>
+        </div>
+
         <div className={styles.body}>
-          {error && <div className={styles.error}>{error}</div>}
-          {settings && !settings.enabled && (
-            <div className={styles.hint}>{t('ai.disabledHint')}</div>
-          )}
-          {notConfigured && <div className={styles.hint}>{t('ai.notConfiguredHint')}</div>}
-
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('ai.tab.suggestions')}</h3>
-            {suggestions.length === 0 ? (
-              <p className={styles.empty}>{t('ai.noSuggestions')}</p>
-            ) : (
-              suggestions.map((suggestion) => (
-                <SuggestionCard
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  onSend={(id, index, text) => {
-                    void sendSuggestion(id, index, text);
-                  }}
-                  onDismiss={(id) => {
-                    void dismissSuggestion(id);
-                  }}
-                />
-              ))
+          <div className={styles.tabPanel} hidden={tab !== 'suggestions'}>
+            {error && <div className={styles.error}>{error}</div>}
+            {settings && !settings.enabled && (
+              <div className={styles.hint}>{t('ai.disabledHint')}</div>
             )}
-          </section>
+            {notConfigured && <div className={styles.hint}>{t('ai.notConfiguredHint')}</div>}
 
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('ai.activity')}</h3>
-            {activity.length === 0 ? (
-              <p className={styles.empty}>{t('ai.noActivity')}</p>
-            ) : (
-              <ul className={styles.activityList}>
-                {activity.slice(0, 20).map((entry, index) => (
-                  <li
-                    key={`${entry.timestamp}-${index}`}
-                    className={styles.activityItem}
-                    data-kind={entry.kind}
-                  >
-                    <span className={styles.activityKind}>{t(activityKindKey(entry.kind))}</span>
-                    <span className={styles.activityMessage}>{entry.message}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+            <section className={styles.section}>
+              <h3 className={styles.sectionTitle}>{t('ai.tab.suggestions')}</h3>
+              {suggestions.length === 0 ? (
+                <p className={styles.empty}>{t('ai.noSuggestions')}</p>
+              ) : (
+                suggestions.map((suggestion) => (
+                  <SuggestionCard
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    onSend={(id, index, text) => {
+                      void sendSuggestion(id, index, text);
+                    }}
+                    onDismiss={(id) => {
+                      void dismissSuggestion(id);
+                    }}
+                  />
+                ))
+              )}
+            </section>
+
+            <section className={styles.section}>
+              <h3 className={styles.sectionTitle}>{t('ai.activity')}</h3>
+              {activity.length === 0 ? (
+                <p className={styles.empty}>{t('ai.noActivity')}</p>
+              ) : (
+                <ul className={styles.activityList}>
+                  {activity.slice(0, 20).map((entry, index) => (
+                    <li
+                      key={`${entry.timestamp}-${index}`}
+                      className={styles.activityItem}
+                      data-kind={entry.kind}
+                    >
+                      <span className={styles.activityKind}>{t(activityKindKey(entry.kind))}</span>
+                      <span className={styles.activityMessage}>{entry.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+
+          <div className={styles.tabPanel} hidden={tab !== 'chat'}>
+            <AiChat />
+          </div>
         </div>
       </aside>
     </div>

@@ -38,6 +38,9 @@ Linkpearl 在 FFXIV 游戏内运行一个轻量 Web 服务器。它把游戏聊�
   - **回复建议** — 生成一条建议，可编辑后发送
 - 纯对话模型，不调用工具、不执行隐藏操作
 - 建议与活动日志同时显示在浏览器面板和游戏内 `/linkpearl ai` 窗口
+- **对话界面**：直接与 AI 聊天，并勾选要加入上下文的游戏频道或消息类别（所有消息/通常、战斗、系统、战利品、NPC、制作与采集，以及 Say/Party/Tell/LS/CWLS 等）
+- 自动识别你的角色名，并在提示词中标记哪些消息是你自己发的
+- 每种回复模式使用独立提示词：多选项模式强制返回 JSON 数组，自动回复/建议模式只输出一条可直接发送的聊天文本
 
 ### 一个界面，两种语言
 
@@ -50,6 +53,10 @@ Linkpearl 在 FFXIV 游戏内运行一个轻量 Web 服务器。它把游戏聊�
 | 过滤器与频道选择 | 外观与语言 |
 |---|---|
 | ![过滤器编辑器](images/readme-filter.png) | ![外观设置](images/readme-appearance.png) |
+
+<p align="center">
+  <img src="images/readme-ai-chat.png" alt="AI 对话与上下文选择" width="720">
+</p>
 
 <p align="center">
   <img src="images/readme-mobile.png" alt="手机端 Linkpearl" width="260">

@@ -39,6 +39,66 @@ public static class AiChannels
 
     private static readonly HashSet<ushort> ChatTypes = BuildChatTypeSet();
 
+    /// <summary>
+    /// Message categories available as manual-chat context. "all" means every
+    /// message captured by the AI context buffer, including battle/system logs.
+    /// </summary>
+    public static readonly (string Key, string LabelKey, ushort[] Types)[] ChatContextCategories =
+    [
+        ("all",    "ai.chat.scope.all",    []),
+        ("battle", "ai.chat.scope.battle", [41, 42, 43, 44, 45, 46, 47, 48, 49, 58]),
+        ("system", "ai.chat.scope.system", [1, 2, 55, 56, 57, 59, 60, 64, 67, 69, 70, 73, 75, 76, 77, 78, 79]),
+        ("loot",   "ai.chat.scope.loot",   [44, 62, 65, 71]),
+        ("npc",    "ai.chat.scope.npc",    [61, 68]),
+        ("craft",  "ai.chat.scope.craft",  [59, 66, 67]),
+    ];
+
+    /// <summary>Specific chat channels available as manual-chat context.</summary>
+    public static readonly (string Key, string LabelKey, ushort[] Types)[] ChatContextChannels =
+    [
+        ("say",           "channel.say",           [10]),
+        ("party",         "channel.party",         [14, 32]),
+        ("alliance",      "channel.alliance",      [15]),
+        ("yell",          "channel.yell",          [30]),
+        ("shout",         "channel.shout",         [11]),
+        ("freeCompany",   "channel.freeCompany",   [24]),
+        ("noviceNetwork", "channel.noviceNetwork", [27]),
+        ("tell",          "channel.tell",          [13, 12]),
+        ("ls1",           "channel.ls1",           [16]),
+        ("ls2",           "channel.ls2",           [17]),
+        ("ls3",           "channel.ls3",           [18]),
+        ("ls4",           "channel.ls4",           [19]),
+        ("ls5",           "channel.ls5",           [20]),
+        ("ls6",           "channel.ls6",           [21]),
+        ("ls7",           "channel.ls7",           [22]),
+        ("ls8",           "channel.ls8",           [23]),
+        ("cwls1",         "channel.cwls1",         [37]),
+        ("cwls2",         "channel.cwls2",         [101]),
+        ("cwls3",         "channel.cwls3",         [102]),
+        ("cwls4",         "channel.cwls4",         [103]),
+        ("cwls5",         "channel.cwls5",         [104]),
+        ("cwls6",         "channel.cwls6",         [105]),
+        ("cwls7",         "channel.cwls7",         [106]),
+        ("cwls8",         "channel.cwls8",         [107]),
+    ];
+
+    public static ushort[]? GetContextScopeTypes(string key)
+    {
+        foreach (var (scopeKey, _, types) in ChatContextCategories)
+        {
+            if (string.Equals(scopeKey, key, StringComparison.OrdinalIgnoreCase))
+                return types;
+        }
+
+        foreach (var (scopeKey, _, types) in ChatContextChannels)
+        {
+            if (string.Equals(scopeKey, key, StringComparison.OrdinalIgnoreCase))
+                return types;
+        }
+
+        return null;
+    }
+
     private static HashSet<ushort> BuildChatTypeSet()
     {
         var set = new HashSet<ushort>();

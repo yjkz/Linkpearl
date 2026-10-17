@@ -54,6 +54,15 @@ export const handlers = [
   http.get('/ai/activity', () => HttpResponse.json({ activity: MOCK_AI_ACTIVITY })),
   http.post('/ai/suggestions/send', () => HttpResponse.json({ ok: true })),
   http.post('/ai/suggestions/dismiss', () => HttpResponse.json({ ok: true })),
+  http.post('/ai/chat', async ({ request }) => {
+    const body = (await request.json()) as { message?: string; contextScopes?: string[] };
+    const context = body.contextScopes?.length
+      ? ` with context from ${body.contextScopes.join(', ')}`
+      : '';
+    return HttpResponse.json({
+      reply: `Demo assistant: I received "${body.message ?? ''}"${context}. Ask me to summarize the selected chat, draft a reply, or explain a game mechanic.`,
+    });
+  }),
   http.post('/ai/test', () =>
     HttpResponse.json({ ok: true, latencyMs: 87, model: 'gpt-4o-mini' }),
   ),

@@ -48,6 +48,13 @@ public sealed class AiChatMessage
     public string Content { get; init; } = "";
 }
 
+/// <summary>One turn in the manual AI conversation UI (sent by the browser or ImGui).</summary>
+public sealed class AiChatTurn
+{
+    public string Role { get; set; } = "user";
+    public string Content { get; set; } = "";
+}
+
 /// <summary>
 /// A generated suggestion set waiting for the user to pick/send/edit.
 /// Serialized to the browser as-is; <see cref="ReplyPrefix"/> stays server-side.

@@ -99,6 +99,8 @@ public class WebServer : IAsyncDisposable
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.PUT,     "/ai/settings", _ai.HandlePutSettings, ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.OPTIONS, "/ai/test", _auth.HandleCorsPreflight, ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.POST,    "/ai/test", _ai.HandleTest, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.OPTIONS, "/ai/chat", _auth.HandleCorsPreflight, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.POST,    "/ai/chat", _ai.HandleChat, ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/ai/suggestions", _ai.HandleGetSuggestions, ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/ai/activity", _ai.HandleGetActivity, ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.OPTIONS, "/ai/suggestions/send", _auth.HandleCorsPreflight, ExceptionRoute);

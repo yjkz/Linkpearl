@@ -72,3 +72,19 @@ export interface AiTestResult {
   model?: string;
   error?: string;
 }
+
+export interface AiChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface AiChatEntry extends AiChatTurn {
+  id: string;
+}
+
+export interface AiChatRequest {
+  agentId?: string;
+  message: string;
+  contextScopes: string[];
+  conversation: AiChatTurn[];
+}

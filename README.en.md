@@ -38,6 +38,9 @@ Linkpearl runs a lightweight web server inside Final Fantasy XIV. It streams you
   - **Reply suggestion** — edit one suggestion before sending
 - The assistant is a plain chat model — no tool calling, no hidden actions
 - Suggestions and activity appear in both the browser panel and the in-game `/linkpearl ai` window
+- **Chat view**: talk to the assistant directly and choose which game channels or message categories to include as context (All messages/General, Battle, System, Loot, NPC, Craft & Gather, plus Say/Party/Tell/LS/CWLS, etc.)
+- Knows your character name and marks your own messages in the prompt
+- Mode-specific prompts: options mode requires a JSON array, while auto-reply and suggestion modes output a single ready-to-send chat message
 
 ### One interface, two languages
 
@@ -50,6 +53,10 @@ Linkpearl runs a lightweight web server inside Final Fantasy XIV. It streams you
 | Filters & channel selection | Appearance & language |
 |---|---|
 | ![Filter editor](images/readme-filter.png) | ![Appearance settings](images/readme-appearance.png) |
+
+<p align="center">
+  <img src="images/readme-ai-chat.png" alt="AI chat with selectable context sources" width="720">
+</p>
 
 <p align="center">
   <img src="images/readme-mobile.png" alt="Linkpearl on a phone" width="260">

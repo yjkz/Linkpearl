@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { RELAY_ADDR } from '../constants/config';
 import type {
   AiActivity,
+  AiChatEntry,
+  AiChatTurn,
   AiSettings,
   AiSettingsUpdate,
   AiSuggestion,
@@ -28,6 +30,9 @@ interface AiState {
   settingsLoaded: boolean;
   suggestions: AiSuggestion[];
   activity: AiActivity[];
+  chatTurns: AiChatEntry[];
+  chatSending: boolean;
+  chatError: string | null;
   loading: boolean;
   saving: boolean;
   error: string | null;
@@ -38,6 +43,8 @@ interface AiState {
   loadActivity: () => Promise<void>;
   sendSuggestion: (id: string, index?: number, text?: string) => Promise<boolean>;
   dismissSuggestion: (id: string) => Promise<void>;
+  sendChat: (message: string, contextScopes: string[], agentId?: string) => Promise<void>;
+  clearChat: () => void;
   testConnection: () => Promise<AiTestResult>;
   upsertSuggestion: (suggestion: AiSuggestion) => void;
   removeSuggestion: (id: string) => void;
@@ -52,6 +59,9 @@ export const useAiStore = create<AiState>((set, get) => ({
   settingsLoaded: false,
   suggestions: [],
   activity: [],
+  chatTurns: [],
+  chatSending: false,
+  chatError: null,
   loading: false,
   saving: false,
   error: null,
@@ -143,6 +153,58 @@ export const useAiStore = create<AiState>((set, get) => ({
       /* ignore */
     }
   },
+
+  sendChat: async (message, contextScopes, agentId) => {
+    const trimmed = message.trim();
+    if (!trimmed) return;
+
+    const conversation: AiChatTurn[] = get().chatTurns.map(({ role, content }) => ({
+      role,
+      content,
+    }));
+    const userEntry: AiChatEntry = {
+      id: `${Date.now()}-user`,
+      role: 'user',
+      content: trimmed,
+    };
+
+    set((state) => ({
+      chatTurns: [...state.chatTurns, userEntry],
+      chatSending: true,
+      chatError: null,
+    }));
+
+    try {
+      const res = await fetch(`${RELAY_ADDR}/ai/chat`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId,
+          message: trimmed,
+          contextScopes,
+          conversation,
+        }),
+      });
+      if (!res.ok) throw new Error(await readError(res));
+      const data = (await res.json()) as { reply?: string };
+      const reply = data.reply?.trim();
+      if (!reply) throw new Error('The model returned an empty reply.');
+
+      set((state) => ({
+        chatTurns: [
+          ...state.chatTurns,
+          { id: `${Date.now()}-assistant`, role: 'assistant', content: reply },
+        ],
+      }));
+    } catch (e) {
+      set({ chatError: e instanceof Error ? e.message : String(e) });
+    } finally {
+      set({ chatSending: false });
+    }
+  },
+
+  clearChat: () => set({ chatTurns: [], chatError: null }),
 
   testConnection: async () => {
     try {

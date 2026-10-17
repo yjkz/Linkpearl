@@ -15,6 +15,7 @@ public sealed class AiService : IDisposable
     private const int MaxSuggestions = 20;
     private const int MaxActivity = 50;
     private const int MaxReplyBytes = 420; // leaves room for the channel/tell prefix (500-byte game limit)
+    private const int ContextBufferSize = 500;
 
     private readonly Plugin _plugin;
     private readonly ChatReceiver _receiver;
@@ -24,6 +25,8 @@ public sealed class AiService : IDisposable
 
     private readonly List<AiSuggestionSet> _suggestions = [];
     private readonly List<AiActivityEntry> _activity = [];
+    private readonly LinkedList<ReceivedChatMessage> _contextBuffer = new();
+    private readonly object _contextGate = new();
     private readonly Dictionary<string, DateTimeOffset> _lastTrigger = new();
     private readonly Dictionary<string, List<DateTimeOffset>> _recentTriggers = new();
     private readonly Dictionary<string, CancellationTokenSource> _requestCts = new();
@@ -45,6 +48,7 @@ public sealed class AiService : IDisposable
 
         _client = new AiClient(log);
         _receiver.OnMessageReceived += OnMessageReceived;
+        _receiver.OnAnyMessageReceived += OnAnyMessageReceived;
     }
 
     /// <summary>
@@ -277,9 +281,39 @@ public sealed class AiService : IDisposable
             _suggestions.Clear();
             _activity.Clear();
         }
+
+        lock (_contextGate)
+        {
+            _contextBuffer.Clear();
+        }
     }
 
     // ── Triggering ──────────────────────────────────────────────────
+
+    private void OnAnyMessageReceived(ReceivedChatMessage message)
+    {
+        if (string.IsNullOrWhiteSpace(ExtractText(message)))
+            return;
+
+        lock (_contextGate)
+        {
+            _contextBuffer.AddLast(message);
+            while (_contextBuffer.Count > ContextBufferSize)
+                _contextBuffer.RemoveFirst();
+        }
+    }
+
+    private List<ReceivedChatMessage> GetContextMessages(HashSet<ushort>? types, int limit)
+    {
+        lock (_contextGate)
+        {
+            IEnumerable<ReceivedChatMessage> source = _contextBuffer;
+            if (types is { Count: > 0 })
+                source = source.Where(m => types.Contains(m.Type));
+
+            return source.TakeLast(Math.Clamp(limit, 1, 100)).ToList();
+        }
+    }
 
     private void OnMessageReceived(ReceivedChatMessage message)
     {
@@ -404,17 +438,39 @@ public sealed class AiService : IDisposable
 
         messages.Insert(0, new AiChatMessage { Role = "system", Content = systemPrompt });
 
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(config.AiRequestTimeoutSeconds, 5, 120)));
+        async Task<string> CallApiAsync(IReadOnlyList<AiChatMessage> requestMessages)
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(config.AiRequestTimeoutSeconds, 5, 120)));
 
-        var content = await _client.CompleteAsync(
-            config.AiApiBaseUrl,
-            config.AiApiKey,
-            model,
-            messages,
-            agent.Temperature,
-            agent.MaxTokens,
-            timeout.Token).ConfigureAwait(false);
+            return await _client.CompleteAsync(
+                config.AiApiBaseUrl,
+                config.AiApiKey,
+                model,
+                requestMessages,
+                agent.Temperature,
+                agent.MaxTokens,
+                timeout.Token).ConfigureAwait(false);
+        }
+
+        var content = await CallApiAsync(messages);
+
+        // Some models ignore the JSON-only instruction on the first attempt.
+        // Retry once with an explicit correction before showing anything to the user.
+        if (rule.Mode == AiReplyModes.Options && !LooksLikeJsonArray(content))
+        {
+            var retryMessages = new List<AiChatMessage>(messages)
+            {
+                new()
+                {
+                    Role = "user",
+                    Content = "Your previous response was not a valid JSON array. " +
+                              "Return ONLY a JSON array of strings, for example [\"reply one\", \"reply two\"]. " +
+                              "Do not include explanations, analysis, numbering or code fences.",
+                },
+            };
+            content = await CallApiAsync(retryMessages);
+        }
 
         switch (rule.Mode)
         {
@@ -495,32 +551,42 @@ public sealed class AiService : IDisposable
             recent.Add(trigger);
         }
 
-        var messages = new List<AiChatMessage>(recent.Count);
+        var messages = new List<AiChatMessage>(recent.Count + 1);
         foreach (var message in recent)
         {
             var text = ExtractText(message);
             if (string.IsNullOrWhiteSpace(text))
                 continue;
 
-            var role = IsLocalPlayer(message.SenderName) ? "assistant" : "user";
+            var isOwn = IsLocalPlayer(message.SenderName);
             var label = AiChannels.GetLabel(message.Type);
             var sender = string.IsNullOrWhiteSpace(message.SenderName) ? "Unknown" : message.SenderName;
             messages.Add(new AiChatMessage
             {
-                Role = role,
-                Content = $"[{label}] {sender}: {text}",
+                Role = isOwn ? "assistant" : "user",
+                Content = $"[{label}] {sender}{(isOwn ? " (you)" : "")}: {text}",
             });
         }
 
-        if (messages.Count == 0 || messages[^1].Role == "assistant")
+        var playerName = GetPlayerName();
+        var channelLabel = AiChannels.GetLabel(trigger.Type);
+        var senderLabel = BuildSenderLabel(trigger);
+
+        var task = rule.Mode switch
         {
-            messages.Add(new AiChatMessage
-            {
-                Role = "user",
-                Content = $"[{AiChannels.GetLabel(trigger.Type)}] {BuildSenderLabel(trigger)}: {triggerText}",
-            });
-        }
+            AiReplyModes.Options =>
+                $"The latest message from {senderLabel} in {channelLabel} is: \"{triggerText}\".\n" +
+                $"Write exactly {Math.Clamp(rule.OptionsCount, 1, 10)} distinct short replies that {playerName} could send next. " +
+                "Return ONLY a JSON array of strings. No explanations, no analysis, no questions.",
+            AiReplyModes.Suggestion =>
+                $"The latest message from {senderLabel} in {channelLabel} is: \"{triggerText}\".\n" +
+                $"Write exactly ONE short suggested reply that {playerName} could send. Output ONLY the reply text.",
+            _ =>
+                $"The latest message from {senderLabel} in {channelLabel} is: \"{triggerText}\".\n" +
+                $"Reply now as {playerName}. Output ONLY the chat message.",
+        };
 
+        messages.Add(new AiChatMessage { Role = "user", Content = task });
         return messages;
     }
 
@@ -528,32 +594,214 @@ public sealed class AiService : IDisposable
     {
         var isEnglish = string.Equals(_plugin.Config.UiLanguage, "en", StringComparison.OrdinalIgnoreCase);
         var fallback = isEnglish
-            ? "You are a friendly, concise assistant in the MMORPG Final Fantasy XIV. Reply naturally based on the conversation."
-            : "你是一名友好、简洁的《最终幻想14》游戏聊天助手。请根据对话上下文自然地回复。";
+            ? "You are a friendly, concise participant in the MMORPG Final Fantasy XIV."
+            : "你是一名友好、简洁的《最终幻想14》玩家。";
 
-        var prompt = string.IsNullOrWhiteSpace(agent.SystemPrompt) ? fallback : agent.SystemPrompt.Trim();
-        var builder = new StringBuilder(prompt);
+        var playerName = GetPlayerName();
+        var builder = new StringBuilder(
+            string.IsNullOrWhiteSpace(agent.SystemPrompt) ? fallback : agent.SystemPrompt.Trim());
         builder.AppendLine();
         builder.AppendLine();
-        builder.AppendLine(isEnglish
-            ? "You are replying inside the game chat through the Linkpearl plugin."
-            : "你正在通过 Linkpearl 插件在游戏内聊天中回复。");
-        builder.AppendLine(isEnglish
-            ? "Keep the reply short (under 300 characters), natural, and suitable for in-game chat."
-            : "回复要简短（300 字符以内）、自然，适合游戏内聊天。");
-        builder.AppendLine(isEnglish
-            ? "Do not use Markdown, code blocks, or line breaks. Do not mention that you are an AI unless asked."
-            : "不要使用 Markdown、代码块或换行。除非被问到，否则不要提到自己是 AI。");
+        builder.AppendLine($"You are writing an in-game chat message as the FFXIV player character \"{playerName}\".");
+        builder.AppendLine($"Messages from \"{playerName}\" in the transcript are your own previous messages. Never reply to yourself.");
+        builder.AppendLine("The transcript is a conversation, not a document to analyse. Never summarize, explain or comment on it.");
+        builder.AppendLine("Never ask the user what they want. You are not an assistant in this task; you are just writing the next chat message.");
+        builder.AppendLine("Reply in the same language as the latest message. Keep it natural and short.");
+        builder.AppendLine("Do not use Markdown, code blocks, bullet points or line breaks. Do not mention being an AI.");
 
-        if (rule.Mode == AiReplyModes.Options)
+        switch (rule.Mode)
         {
-            var count = Math.Clamp(rule.OptionsCount, 1, 10);
-            builder.AppendLine(isEnglish
-                ? $"Return exactly {count} distinct reply candidates as a JSON array of strings and nothing else."
-                : $"请返回 {count} 条不同的候选回复，使用 JSON 字符串数组格式，不要输出其他内容。");
+            case AiReplyModes.Options:
+            {
+                var count = Math.Clamp(rule.OptionsCount, 1, 10);
+                builder.AppendLine(
+                    $"TASK: Write exactly {count} distinct reply candidates. " +
+                    $"Return ONLY a JSON array of {count} strings. " +
+                    "No code fences, no explanations, no analysis, no questions.");
+                break;
+            }
+
+            case AiReplyModes.Suggestion:
+                builder.AppendLine(
+                    "TASK: Write exactly ONE suggested reply. " +
+                    "Output ONLY the reply text. No explanations, no analysis, no questions.");
+                break;
+
+            default:
+                builder.AppendLine(
+                    "TASK: Write exactly ONE reply. " +
+                    "Output ONLY the reply text. No explanations, no analysis, no questions.");
+                break;
         }
 
         return builder.ToString();
+    }
+
+    // ── Manual conversation ─────────────────────────────────────────
+
+    /// <summary>
+    /// Answers a free-form message from the player, optionally with recent
+    /// messages from the selected game channels as context.
+    /// </summary>
+    public async Task<string> ChatAsync(
+        string? agentId,
+        string userMessage,
+        IReadOnlyList<string> contextScopes,
+        IReadOnlyList<AiChatTurn> conversation,
+        CancellationToken cancellationToken)
+    {
+        var config = _plugin.Config;
+        if (!config.AiEnabled)
+            throw new InvalidOperationException("The AI assistant is disabled.");
+        if (string.IsNullOrWhiteSpace(userMessage))
+            throw new InvalidOperationException("The message is empty.");
+
+        var agent = config.AiAgents.FirstOrDefault(a => a.Id == agentId)
+                    ?? config.AiAgents.FirstOrDefault()
+                    ?? throw new InvalidOperationException("No AI agent is configured.");
+
+        var model = string.IsNullOrWhiteSpace(agent.Model) ? config.AiDefaultModel : agent.Model;
+        var messages = new List<AiChatMessage>
+        {
+            new() { Role = "system", Content = BuildChatSystemPrompt(agent, contextScopes) },
+        };
+
+        foreach (var turn in conversation.TakeLast(20))
+        {
+            var content = turn.Content?.Trim() ?? "";
+            if (content.Length == 0)
+                continue;
+            if (content.Length > 4000)
+                content = content[..4000];
+
+            messages.Add(new AiChatMessage
+            {
+                Role = string.Equals(turn.Role, "assistant", StringComparison.OrdinalIgnoreCase)
+                    ? "assistant"
+                    : "user",
+                Content = content,
+            });
+        }
+
+        messages.Add(new AiChatMessage { Role = "user", Content = userMessage.Trim() });
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(config.AiRequestTimeoutSeconds, 5, 120)));
+
+        await _concurrency.WaitAsync(timeout.Token).ConfigureAwait(false);
+        try
+        {
+            var reply = await _client.CompleteAsync(
+                config.AiApiBaseUrl,
+                config.AiApiKey,
+                model,
+                messages,
+                agent.Temperature,
+                agent.MaxTokens,
+                timeout.Token).ConfigureAwait(false);
+
+            var trimmed = reply.Trim();
+            if (trimmed.Length == 0)
+                throw new InvalidOperationException("The model returned an empty reply.");
+            return trimmed;
+        }
+        finally
+        {
+            _concurrency.Release();
+        }
+    }
+
+    private string BuildChatSystemPrompt(AiAgentConfig agent, IReadOnlyList<string> contextScopes)
+    {
+        var isEnglish = string.Equals(_plugin.Config.UiLanguage, "en", StringComparison.OrdinalIgnoreCase);
+        var fallback = isEnglish
+            ? "You are a helpful assistant embedded in the Linkpearl plugin for Final Fantasy XIV."
+            : "你是 Linkpearl 插件内置的《最终幻想14》聊天助手。";
+        var playerName = GetPlayerName();
+
+        var builder = new StringBuilder(
+            string.IsNullOrWhiteSpace(agent.SystemPrompt) ? fallback : agent.SystemPrompt.Trim());
+        builder.AppendLine();
+        builder.AppendLine();
+        builder.AppendLine(
+            $"You are talking directly to the player. Their character name is \"{playerName}\"; " +
+            "messages from this name in the game context are the player's own words.");
+        builder.AppendLine(
+            "The game chat context is a transcript from the selected channels/categories. Use it to answer the player's question; " +
+            "do not reply to the transcript as a participant unless the player explicitly asks you to draft a reply.");
+        builder.AppendLine(
+            "Answer in the same language as the player's latest message. " +
+            "Be concise and practical. Markdown is allowed when it improves readability.");
+
+        var context = BuildChannelContext(contextScopes);
+        if (!string.IsNullOrEmpty(context))
+        {
+            builder.AppendLine();
+            builder.AppendLine("Recent in-game chat context (oldest to newest):");
+            builder.AppendLine(context);
+        }
+
+        return builder.ToString();
+    }
+
+    private string BuildChannelContext(IReadOnlyList<string> contextScopes)
+    {
+        if (contextScopes.Count == 0)
+            return "";
+
+        var all = contextScopes.Any(scope => string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase));
+        HashSet<ushort>? filter = null;
+
+        if (!all)
+        {
+            filter = new HashSet<ushort>();
+            foreach (var scope in contextScopes)
+            {
+                var types = AiChannels.GetContextScopeTypes(scope);
+                if (types == null)
+                    continue;
+
+                foreach (var type in types)
+                    filter.Add(type);
+            }
+
+            if (filter.Count == 0)
+                return "";
+        }
+
+        var limit = Math.Clamp(_plugin.Config.AiContextMessageCount, 1, 100);
+        var messages = GetContextMessages(filter, limit);
+        var builder = new StringBuilder();
+
+        foreach (var message in messages)
+        {
+            var text = ExtractText(message);
+            if (string.IsNullOrWhiteSpace(text))
+                continue;
+
+            var isOwn = IsLocalPlayer(message.SenderName);
+            var label = AiChannels.GetLabel(message.Type);
+            var sender = string.IsNullOrWhiteSpace(message.SenderName) ? "Unknown" : message.SenderName;
+            builder.AppendLine($"[{label}] {sender}{(isOwn ? " (you)" : "")}: {text}");
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private string GetPlayerName() =>
+        string.IsNullOrWhiteSpace(_plugin.LocalPlayerName) ? "the player" : _plugin.LocalPlayerName;
+
+    private static bool LooksLikeJsonArray(string content)
+    {
+        var trimmed = content.Trim();
+        if (trimmed.StartsWith("```", StringComparison.Ordinal))
+        {
+            var newline = trimmed.IndexOf('\n');
+            if (newline >= 0)
+                trimmed = trimmed[(newline + 1)..].TrimStart();
+        }
+
+        return trimmed.StartsWith("[", StringComparison.Ordinal);
     }
 
     // ── Suggestion / activity storage ───────────────────────────────
@@ -704,6 +952,7 @@ public sealed class AiService : IDisposable
     public void Dispose()
     {
         _receiver.OnMessageReceived -= OnMessageReceived;
+        _receiver.OnAnyMessageReceived -= OnAnyMessageReceived;
 
         try { _lifetime.Cancel(); } catch { /* ignore */ }
         lock (_gate)

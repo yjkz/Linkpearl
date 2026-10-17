@@ -2,9 +2,9 @@
   {
     "Author": "yjkz",
     "Name": "Linkpearl",
-    "Description": "Linkpearl 在 FFXIV 游戏内运行一个轻量 Web 服务器，把游戏聊天实时推送到浏览器，并支持从任何地方回复。它还内置 OpenAI 兼容的 AI 助手，可以对指定频道自动回复、给出多个回复选项，或生成可编辑的回复建议。\n\n功能：\n- 通过 Server-Sent Events 实时推送聊天\n- 支持 FC、LS/CWLS 1-8、小队、私聊、说话、喊话、呼喊、团队、新手频道等全部频道\n- 自定义过滤器：文件夹、拖拽排序、未读角标、默认发送频道\n- 私聊模式：固定回复对象、最近私聊历史\n- 可选发送队列：发送前短暂倒计时，可取消误发\n- 表情选择器（搜索/最近使用）与 FFXIV 特殊符号选择器\n- 受信任站点的链接预览（Lodestone、YouTube、Twitter/X、Twitch 等）\n- AI 助手：多 Agent、按频道触发规则、冷却与频率限制、三种回复模式\n- 浏览器与游戏内窗口共享中英文界面（默认中文）\n- 外观定制：浅色/深色主题、Google 字体、字号、按频道着色\n- 浏览器访问密码保护\n\n使用：\n- /linkpearl 打开设置；/linkpearl ai 打开 AI 窗口\n- 在“安全”中设置 4-8 位数字密码，然后在浏览器打开显示的地址\n- 在 设置 -> AI 助手 中配置 API Base URL、API Key、模型，并添加 Agent 与触发规则",
+    "Description": "Linkpearl 在 FFXIV 游戏内运行一个轻量 Web 服务器，把游戏聊天实时推送到浏览器，并支持从任何地方回复。它还内置 OpenAI 兼容的 AI 助手，可以对指定频道自动回复、给出多个回复选项，或生成可编辑的回复建议。\n\n功能：\n- 通过 Server-Sent Events 实时推送聊天\n- 支持 FC、LS/CWLS 1-8、小队、私聊、说话、喊话、呼喊、团队、新手频道等全部频道\n- 自定义过滤器：文件夹、拖拽排序、未读角标、默认发送频道\n- 私聊模式：固定回复对象、最近私聊历史\n- 可选发送队列：发送前短暂倒计时，可取消误发\n- 表情选择器（搜索/最近使用）与 FFXIV 特殊符号选择器\n- 受信任站点的链接预览（Lodestone、YouTube、Twitter/X、Twitch 等）\n- AI 助手：多 Agent、按频道触发规则、冷却与频率限制、三种回复模式\n- AI 对话界面：可将“所有消息/通常”、战斗、系统、战利品、NPC、制作与采集或具体频道加入上下文直接对话\n- 浏览器与游戏内窗口共享中英文界面（默认中文）\n- 外观定制：浅色/深色主题、Google 字体、字号、按频道着色\n- 浏览器访问密码保护\n\n使用：\n- /linkpearl 打开设置；/linkpearl ai 打开 AI 窗口\n- 在“安全”中设置 4-8 位数字密码，然后在浏览器打开显示的地址\n- 在 设置 -> AI 助手 中配置 API Base URL、API Key、模型，并添加 Agent 与触发规则",
     "InternalName": "Linkpearl",
-    "AssemblyVersion": "1.6.0.2",
+    "AssemblyVersion": "1.7.0.0",
     "TestingAssemblyVersion": null,
     "RepoUrl": "https://github.com/yjkz/Linkpearl",
     "ApplicableVersion": "any",
@@ -12,12 +12,13 @@
     "Punchline": "在浏览器中实时查看和回复 FFXIV 聊天，内置 AI 助手。",
     "IsHide": false,
     "IsTestingExclusive": false,
-    "DownloadLinkInstall": "https://github.com/yjkz/Linkpearl/releases/download/v1.6.0.2/Linkpearl.zip",
-    "DownloadLinkUpdate": "https://github.com/yjkz/Linkpearl/releases/download/v1.6.0.2/Linkpearl.zip",
-    "LastUpdate": 1792240518,
+    "DownloadLinkInstall": "https://github.com/yjkz/Linkpearl/releases/download/v1.7.0.0/Linkpearl.zip",
+    "DownloadLinkUpdate": "https://github.com/yjkz/Linkpearl/releases/download/v1.7.0.0/Linkpearl.zip",
+    "LastUpdate": 1792244532,
     "IconUrl": "https://raw.githubusercontent.com/yjkz/Linkpearl/main/images/icon.png",
     "ImageUrls": [
       "https://raw.githubusercontent.com/yjkz/Linkpearl/main/images/readme-chat.png",
+      "https://raw.githubusercontent.com/yjkz/Linkpearl/main/images/readme-ai-chat.png",
       "https://raw.githubusercontent.com/yjkz/Linkpearl/main/images/readme-mobile.png",
       "https://raw.githubusercontent.com/yjkz/Linkpearl/main/images/readme-filter.png",
       "https://raw.githubusercontent.com/yjkz/Linkpearl/main/images/readme-appearance.png"

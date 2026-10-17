@@ -63,6 +63,12 @@ public class ChatReceiver : IDisposable
 
     public event Action<ReceivedChatMessage>? OnMessageReceived;
 
+    /// <summary>
+    /// Raised for every parsed chat message, including battle/system types that are
+    /// not stored in <see cref="History"/>. Used by the AI context buffer.
+    /// </summary>
+    public event Action<ReceivedChatMessage>? OnAnyMessageReceived;
+
     /// <summary>Chat history store. Automatically appends received messages for tracked types only.</summary>
     public ChatHistory History { get; } = new ChatHistory();
 
@@ -175,6 +181,10 @@ public class ChatReceiver : IDisposable
             {
                 msg.MessagePayloads.Insert(0, new ChatPayloadDto { Type = "text", Text = msg.SenderName });
             }
+
+            // Let the AI context buffer see every message type, including the
+            // battle/system logs that are intentionally excluded from History.
+            OnAnyMessageReceived?.Invoke(msg);
 
             // Only save history and broadcast for tracked types.
             // High-frequency battle/effect/system types are intentionally excluded.
