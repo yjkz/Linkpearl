@@ -476,6 +476,12 @@ public sealed class AiService : IDisposable
         {
             case AiReplyModes.Options:
             {
+                if (!LooksLikeJsonArray(content))
+                {
+                    AddActivity("error", "The model did not return a JSON array of reply options; skipped.");
+                    return;
+                }
+
                 var candidates = AiClient.ParseCandidates(content, rule.OptionsCount);
                 AddSuggestion(rule, agent, trigger, triggerText, candidates);
                 break;
@@ -483,6 +489,12 @@ public sealed class AiService : IDisposable
 
             case AiReplyModes.Suggestion:
             {
+                if (LooksLikeAnalysis(content))
+                {
+                    AddActivity("error", "The model returned analysis instead of a reply; skipped.");
+                    return;
+                }
+
                 var suggestion = SanitizeForChat(content);
                 if (suggestion.Length == 0)
                 {
@@ -495,6 +507,12 @@ public sealed class AiService : IDisposable
 
             default:
             {
+                if (LooksLikeAnalysis(content))
+                {
+                    AddActivity("error", "The model returned analysis instead of a reply; skipped.");
+                    return;
+                }
+
                 var reply = SanitizeForChat(content);
                 if (reply.Length == 0)
                 {
@@ -802,6 +820,21 @@ public sealed class AiService : IDisposable
         }
 
         return trimmed.StartsWith("[", StringComparison.Ordinal);
+    }
+
+    private static readonly string[] AnalysisMarkers =
+    [
+        "你想让我", "需要我做什么", "这段内容", "这段聊天", "这是一段",
+        "what would you like me to", "what do you want me to",
+        "i'm not sure what you want", "i am not sure what you want",
+        "this appears to be a", "this looks like a chat",
+    ];
+
+    /// <summary>Detects the common "model analyses the transcript instead of replying" failure.</summary>
+    private static bool LooksLikeAnalysis(string content)
+    {
+        var lower = content.ToLowerInvariant();
+        return AnalysisMarkers.Any(marker => lower.Contains(marker, StringComparison.Ordinal));
     }
 
     // ── Suggestion / activity storage ───────────────────────────────
