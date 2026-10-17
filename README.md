@@ -100,9 +100,20 @@ You can whitelist trusted domains so subsequent clicks open immediately without 
 
 ## Setup
 
-### 1. Install the plugin
+### 1. Add the custom repository
 
-Open the **Dalamud Plugin Installer**, search for **Linkpearl**, and install it.
+Linkpearl is published through its own Dalamud repository:
+
+```
+https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/pluginmaster.json
+```
+
+1. In game, run `/xlsettings` to open Dalamud settings.
+2. Open the **Experimental** tab.
+3. Add the URL above to **Custom Plugin Repositories** (one URL per line), then save.
+4. Open the **Dalamud Plugin Installer**, search for **Linkpearl**, and install it.
+
+For local development, skip the repository and add the build output folder (for example `bin\Debug`) to **Dev Plugin Locations** instead.
 
 ### 2. Set a passcode
 
@@ -151,6 +162,16 @@ To access it from your phone or laptop while away from home, the easiest solutio
 No port forwarding, no firewall rules, no router configuration needed.
 
 </details>
+
+---
+
+## Releasing
+
+1. Bump `<Version>` in `Linkpearl.csproj` and commit the change to `main`.
+2. Push a tag matching the version, e.g. `v1.6.0.2`.
+3. The `Release` workflow will lint/test/build the frontend, build the plugin, publish `Linkpearl.zip` as a GitHub Release asset, and update `pluginmaster.json` with the new version and download links.
+
+For local development, `dotnet build Linkpearl.sln` produces a loadable plugin in `bin\Debug` (including `Linkpearl.json` and `dist\`).
 
 ---
 

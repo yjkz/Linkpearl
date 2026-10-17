@@ -1,0 +1,33 @@
+[
+  {
+    "Author": "twelvehouse",
+    "Name": "Linkpearl",
+    "Description": "Linkpearl streams your FFXIV chat to any browser in real time and lets you reply from anywhere. It also includes an OpenAI-compatible AI assistant that can auto-reply, offer multiple reply options, or suggest replies in selected channels.\n\nFeatures:\n- Real-time chat streaming via Server-Sent Events\n- Supports all channel types: FC, LS/CWLS 1-8, Party, Tell, Say, Shout, Yell, Alliance, and more\n- Custom filters with drag-and-drop reordering, unread badges, and default send channels\n- Tell mode with pin support and recent DM history\n- Send queue with a short countdown so you can cancel accidental sends\n- Emote picker with search and recently used, plus an FFXIV symbol picker\n- Link previews for trusted sites (Lodestone, YouTube, Twitter/X, Twitch, and more)\n- AI assistant with multiple custom agents, per-channel trigger rules, cooldown/rate limits, and three reply modes\n- Chinese/English interface shared by the browser and in-game windows (Chinese by default)\n- Appearance customisation: Light and Dark themes, Google Fonts, font size, coloured message backgrounds\n- Passcode authentication for browser access\n\nUsage:\n- Open the settings with /linkpearl; open the AI assistant with /linkpearl ai\n- Set a 4-8 digit passcode under Security, then open the shown URL in your browser\n- Configure the AI provider (Base URL, API Key, model) and add agents/rules under Settings -> AI Assistant",
+    "InternalName": "Linkpearl",
+    "AssemblyVersion": "1.6.0.1",
+    "TestingAssemblyVersion": null,
+    "RepoUrl": "https://github.com/yjkz/ChatAnywhere",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 15,
+    "Punchline": "Real-time web chat relay for FFXIV with an AI assistant, in and out of game.",
+    "IsHide": false,
+    "IsTestingExclusive": false,
+    "DownloadLinkInstall": "https://github.com/yjkz/ChatAnywhere/releases/download/v1.6.0.1/Linkpearl.zip",
+    "DownloadLinkUpdate": "https://github.com/yjkz/ChatAnywhere/releases/download/v1.6.0.1/Linkpearl.zip",
+    "LastUpdate": 1792237964,
+    "IconUrl": "https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/images/icon.png",
+    "ImageUrls": [
+      "https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/images/readme-chat.png",
+      "https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/images/readme-mobile.png",
+      "https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/images/readme-filter.png",
+      "https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/images/readme-appearance.png"
+    ],
+    "Tags": [
+      "chat",
+      "web",
+      "browser",
+      "relay",
+      "ai"
+    ]
+  }
+]
