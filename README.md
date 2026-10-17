@@ -1,108 +1,63 @@
 <div align="center">
   <img src="images/icon.png" alt="Linkpearl icon" width="96">
   <h1>Linkpearl</h1>
-  <p>Host your chat on a web server so you can talk from anywhere.</p>
-  <a href="https://github.com/yjkz/ChatAnywhere">
-    <img src="https://img.shields.io/endpoint?url=https://qzysathwfhebdai6xgauhz4q7m0mzmrf.lambda-url.us-east-1.on.aws/ChatAnywhere" alt="Download count">
-  </a>
+  <p><strong>Real-time FFXIV chat in your browser, with an AI assistant.</strong></p>
+  <p>
+    <a href="https://github.com/yjkz/ChatAnywhere/releases"><img src="https://img.shields.io/github/v/release/yjkz/ChatAnywhere" alt="Latest release"></a>
+    <a href="https://github.com/yjkz/ChatAnywhere/actions/workflows/release.yml"><img src="https://github.com/yjkz/ChatAnywhere/actions/workflows/release.yml/badge.svg" alt="Release workflow"></a>
+  </p>
 </div>
 
-<div align="center">
-  <table><tr>
-    <td><img src="images/readme-chat.png" alt="Chat view on desktop" width="560"></td>
-    <td><img src="images/readme-mobile.png" alt="Chat view on mobile" width="180"></td>
-  </tr></table>
-</div>
+Linkpearl runs a lightweight web server inside Final Fantasy XIV. It streams your in-game chat to any browser in real time, lets you reply from anywhere, and adds an OpenAI-compatible AI assistant that can answer, offer reply options, or suggest replies in the channels you choose.
 
-Linkpearl is a [Dalamud](https://github.com/goatcorp/Dalamud) plugin that runs a lightweight web server inside FFXIV.
-It streams your in-game chat to any browser in real time, and lets you send messages back without switching to the game window.
+![Linkpearl chat view with the AI assistant panel open](images/readme-chat.png)
 
----
+## Highlights
 
-## Features
+### Chat, everywhere
 
-### Real-time chat streaming
-
-Messages arrive instantly via Server-Sent Events (no polling).
-All FFXIV channel types are supported: **FC, LS1–8, CWLS1–8, Party, Tell, Say, Shout, Yell, Alliance,** and more.
-
-Each message shows the sender's Lodestone avatar, a coloured channel badge, auto-translate bracket rendering (`【 … 】`), and FFXIV item link indicators.
-
-### Custom filters
-
-Create named filters that show only the channel types you care about.
-Organise filters into folders and reorder everything with drag-and-drop.
-
-Each filter can have its own:
-- **Default send channel** — the channel used when you press Send
-- **Unread badge** — highlights the filter tab when new messages arrive while it's not active
-
-![Filter editor](images/readme-filter.png)
-
-### Tell mode
-
-Click any sender's name to enter **Tell mode** and reply to them directly.
-- **Pin** the conversation to keep Tell mode active across multiple sends
-- Use the **channel switcher** to switch between Tell and any other channel mid-session
-- Recent Tell partners appear in the **Direct Messages** section of the sidebar — clicking one automatically pins them as the active send target
-
-### Emote & symbol picker
-
-A built-in picker lets you perform emotes or insert FFXIV special characters without ever leaving the chat window.
-
-**Emotes tab** — lists every emote you own, pulled live from your game data.
-Search by name or `/command` (tap × to clear), see your recently used emotes at the top, and toggle whether the emote appears in the chat log (with or without the `motion` suffix).
-Enable *Confirm mode* in Settings to require a second tap before the emote fires — handy on touchscreens.
-
-**Symbols tab** — gives quick access to every FFXIV private-use symbol:
-party numbers ①–⑧, raid signs (Attack / Bind / Circle etc.), instance markers, time icons, and more.
-
-### Send queue
-
-After pressing Send, the message waits briefly before being delivered — giving you a moment to catch a typo or stop an accidental send.
-A countdown ring shows the time remaining. Tap anywhere in the message box to cancel and get your text back.
-
-### Link preview
-
-URLs from trusted sites (Lodestone, YouTube, Twitter/X, Twitch, Imgur, and more) automatically render an inline preview card showing the page title, description, and thumbnail.
-YouTube links show an embedded player you can watch without leaving the chat window.
+- Real-time streaming over Server-Sent Events — no polling
+- Supports FC, LS/CWLS 1–8, Party, Tell, Say, Shout, Yell, Alliance, Novice Network and more
+- Custom filters with folders, drag-and-drop ordering, unread badges and per-filter send channels
+- Tell mode with pinning and recent direct-message history
+- Optional send queue with a short countdown so you can cancel an accidental send
+- Emote picker with search and recently used, plus an FFXIV symbol picker
+- Rich link previews for trusted sites (Lodestone, YouTube, Twitter/X, Twitch and more)
+- Passcode authentication for browser access
 
 ### AI assistant
 
-Linkpearl can watch selected chat channels and let an OpenAI-compatible model draft or send replies.
+- Works with any OpenAI-compatible Chat Completions provider (OpenAI, DeepSeek, Z.ai, Ollama, LM Studio, …)
+- Multiple custom agents, each with its own system prompt, model override, temperature and token limit
+- Per-channel trigger rules with cooldowns and per-minute rate limits
+- Three reply modes:
+  - **Auto reply** — send the generated reply immediately
+  - **Multiple options** — offer several clickable candidate replies
+  - **Reply suggestion** — edit one suggestion before sending
+- The assistant is a plain chat model — no tool calling, no hidden actions
+- Suggestions and activity appear in both the browser panel and the in-game `/linkpearl ai` window
 
-- **Agents** — create multiple agents, each with its own system prompt, model override, temperature, and token limit
-- **Trigger rules** — bind an agent to specific channels (Say, Party, FC, LS/CWLS, Tell, …)
-- **Reply modes** — `Auto reply` sends the generated reply immediately, `Multiple options` offers several clickable candidates, and `Reply suggestion` lets you edit one suggestion before sending
-- **Both UIs** — manage suggestions and settings from the browser panel or the in-game `/linkpearl ai` window
-- No tool calling: the assistant is a plain chat model
+### One interface, two languages
 
-Configure the API Base URL, API Key, and default model under **Settings → AI Assistant**.
-AI is disabled by default, and auto replies are rate-limited per rule.
+- The browser and the in-game windows share the same language setting
+- **Chinese is the default**, English can be selected at any time
+- The choice is stored in the plugin configuration and synced live between both UIs
 
-### Link safety
+## Screenshots
 
-Clicking a URL in chat opens a confirmation dialog before leaving the page.
-You can whitelist trusted domains so subsequent clicks open immediately without prompting.
+| Filters & channel selection | Appearance & language |
+|---|---|
+| ![Filter editor](images/readme-filter.png) | ![Appearance settings](images/readme-appearance.png) |
 
-### Appearance
+<p align="center">
+  <img src="images/readme-mobile.png" alt="Linkpearl on a phone" width="260">
+</p>
 
-![Appearance settings](images/readme-appearance.png)
+## Installation
 
-- Switch between **Light**, **Dark**, and **System** (follows your OS) themes
-- Switch the interface language between **中文** (default) and **English** — the choice is shared with the in-game windows
-- Choose any **Google Font** for the chat window
-- Adjust **font size**
-- Toggle **italic rendering** for system messages
-- Enable **coloured message backgrounds** per channel type (subtle tint behind each message)
+### Custom Dalamud repository
 
----
-
-## Setup
-
-### 1. Add the custom repository
-
-Linkpearl is published through its own Dalamud repository:
+Linkpearl is distributed through its own plugin repository:
 
 ```
 https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/pluginmaster.json
@@ -113,75 +68,85 @@ https://raw.githubusercontent.com/yjkz/ChatAnywhere/main/pluginmaster.json
 3. Add the URL above to **Custom Plugin Repositories** (one URL per line), then save.
 4. Open the **Dalamud Plugin Installer**, search for **Linkpearl**, and install it.
 
-For local development, skip the repository and add the build output folder (for example `bin\Debug`) to **Dev Plugin Locations** instead.
+The installer entry includes the full description, icon and screenshots.
 
-### 2. Set a passcode
+### Local development
 
-Before opening the browser UI, set a **4–8 digit numeric passcode** in the plugin settings window (**Linkpearl → Security**).
-This passcode protects the web interface from unauthorised access.
+For local development, skip the repository and add the build output folder (for example `bin\Debug`) to **Dev Plugin Locations** in Dalamud's Experimental settings. The folder must contain `Linkpearl.dll`, `Linkpearl.json` and the `dist\` frontend folder.
 
-### 3. Open the chat UI
+## Setup
 
-Once the plugin is loaded and you are logged in to a character, open your browser and go to:
-
-```
-http://localhost:3000
-```
-
-You will be prompted to enter your passcode. After authenticating, the page streams your chat in real time.
-
-To access from another device on the same network (phone, tablet, etc.), use your PC's local IP address instead:
-
-```
-http://192.168.x.x:3000
-```
-
-You can find your local IP by running `ipconfig` in a terminal and looking for the IPv4 address.
-
-<details>
-<summary>Accessing Linkpearl from outside your home network (Tailscale)</summary>
-
-By default the server only listens on `localhost`, so it is not reachable from other devices.
-To access it from your phone or laptop while away from home, the easiest solution is **Tailscale** — a free VPN that creates a private network between your devices with zero port-forwarding setup.
-
-**Steps:**
-
-1. Download and install Tailscale on the PC running FFXIV:
-   [tailscale.com/download](https://tailscale.com/download)
-
-2. Install the Tailscale app on the remote device (Android / iOS / another PC) and sign in with the same account.
-
-3. Once both devices appear in your tailnet, find the **Tailscale IP** of your gaming PC in the Tailscale admin panel or the system-tray icon — it looks like `100.x.x.x`.
-
-4. On the remote device, navigate to:
+1. Open the plugin settings with `/linkpearl`.
+2. Under **Security**, set a 4–8 digit numeric passcode.
+3. Start the web server if it is not already running, then open the shown URL in your browser:
 
    ```
-   http://100.x.x.x:3000
+   http://localhost:3000
    ```
 
-No port forwarding, no firewall rules, no router configuration needed.
+4. Enter the passcode. Chat messages stream into the page immediately, and replies are sent back to the game.
 
-</details>
+To use another device on the same network, open `http://<your-local-ip>:3000` instead. The plugin settings window lists the available IPv4 addresses.
 
----
+## AI configuration
+
+1. Open `/linkpearl ai` or the AI panel in the browser.
+2. Open **Settings → AI Assistant**.
+3. Set the **API Base URL**, **API Key** and default model.
+4. Create one or more **Agents** and give each one a system prompt.
+5. Create a **Trigger Rule**, bind it to an agent, pick the channels and choose a reply mode.
+6. Save. The **Test Connection** button saves the current settings and verifies the provider.
+
+Auto replies are rate-limited per rule (cooldown + maximum per minute), and messages sent by your own character are ignored to prevent loops. The API key is stored locally in the plugin configuration and is never sent to the browser.
+
+## Commands
+
+| Command | Action |
+|---|---|
+| `/linkpearl` | Toggle the settings window |
+| `/linkpearl ai` | Toggle the AI assistant window |
+| `/linkpearl start` | Start the web server |
+| `/linkpearl stop` | Stop the web server |
+| `/linkpearl help` | Show command help |
+
+## Building from source
+
+Requirements:
+
+- .NET 10 SDK (the project uses `Dalamud.NET.Sdk/15.0.0`)
+- Node.js 20+ and npm
+- Dalamud reference assemblies (`DALAMUD_HOME` or a local XIVLauncher installation)
+
+```bash
+# Plugin (also builds the frontend and copies dist/ into the output)
+dotnet build Linkpearl.sln
+
+# Frontend only
+cd Http/Frontend
+npm install
+npm run build
+npm test
+npm run lint
+```
+
+The build produces a loadable plugin in `bin\Debug` (or `bin\Release`), including `Linkpearl.json` and `dist\`.
 
 ## Releasing
 
-1. Bump `<Version>` in `Linkpearl.csproj` and commit the change to `main`.
+1. Bump `<Version>` in `Linkpearl.csproj` and commit to `main`.
 2. Push a tag matching the version, e.g. `v1.6.0.2`.
-3. The `Release` workflow will lint/test/build the frontend, build the plugin, publish `Linkpearl.zip` as a GitHub Release asset, and update `pluginmaster.json` with the new version and download links.
-
-For local development, `dotnet build Linkpearl.sln` produces a loadable plugin in `bin\Debug` (including `Linkpearl.json` and `dist\`).
-
----
+3. The `Release` workflow lints/tests/builds the frontend, builds the plugin, publishes `Linkpearl.zip` as a GitHub Release asset and updates `pluginmaster.json`.
 
 ## Acknowledgements
+
+Linkpearl is an independent derivative of the original [ChatAnywhere](https://github.com/twelvehouse/ChatAnywhere) project by twelvehouse. The chat relay, browser UI and plugin foundation started there, and we are grateful for that work.
 
 Linkpearl would not exist without these projects:
 
 | Project | Role |
 |---|---|
-| [ChatTwo](https://github.com/Infiziert90/ChatTwo) | Original inspiration — concept, channel handling, and UI approach |
+| [ChatAnywhere](https://github.com/twelvehouse/ChatAnywhere) | Original project Linkpearl is based on |
+| [ChatTwo](https://github.com/Infiziert90/ChatTwo) | Original inspiration for chat handling and UI approach |
 | [Dalamud](https://github.com/goatcorp/Dalamud) | Plugin framework and FFXIV game API |
 | [NetStone](https://github.com/xivapi/NetStone) | Lodestone character avatar lookups |
 | [OpenGraph-Net](https://github.com/ghorsey/OpenGraph-Net) | URL Open Graph preview metadata |
@@ -189,61 +154,6 @@ Linkpearl would not exist without these projects:
 | [React](https://react.dev/) + [React Compiler](https://react.dev/learn/react-compiler) | Frontend framework with automatic memoization |
 | [Vite](https://vitejs.dev/) | Build tool and dev server |
 | [TanStack Query](https://tanstack.com/query) | Server-state caching and request deduplication |
-| [Zustand](https://github.com/pmndrs/zustand) | Client-state management (settings, session) |
+| [Zustand](https://github.com/pmndrs/zustand) | Client-state management |
 | [@dnd-kit](https://dndkit.com/) | Drag-and-drop filter and folder reordering |
 | [react-error-boundary](https://github.com/bvaughn/react-error-boundary) | Error boundary for the message list |
-| [lucide-react](https://lucide.dev/) | Icon set |
-| [clsx](https://github.com/lukeed/clsx) | Conditional className composition |
-| [rich-textarea](https://github.com/inokawa/rich-textarea) | Textarea with character-range highlighting for the over-limit indicator |
-| [react-countdown-circle-timer](https://github.com/vydimitrov/react-countdown-circle-timer) | Animated countdown ring shown while a queued send is pending |
-| [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) | Unit and component testing |
-| [MSW](https://mswjs.io/) | HTTP mocking shared between tests and the `?demo` page |
-| [Husky](https://typicode.github.io/husky/) + [lint-staged](https://github.com/lint-staged/lint-staged) | Pre-commit lint + test gate |
-
-> **A note on ChatTwo:**
-> This project started as a fork of similar functionality found in ChatTwo. It has been largely rewritten for my own needs, but some code and approaches remain. Thanks for the OSS.
-> 
-> P.S. The author mentioned above has taken a keen interest in this project on the official Dalamud Discord — you can search "chat anywhere" (the space matters) to see for yourself.  
-> I've muted him — but my gratitude remains. 😊
->
-> (Written with Claude Sonnet 4.6)
-
-<details>
-<summary>How it works (technical overview)</summary>
-
-```
-FFXIV game process
- └─ Dalamud plugin (C#)
-      ├─ Subscribes to Dalamud chat events
-      ├─ Watson.Lite HTTP server (default: port 3000)
-      │    │
-      │    │  Authentication
-      │    ├─ POST       /auth       → verify passcode (PBKDF2-SHA256 hash stored in config);
-      │    │                           issues an HttpOnly SameSite=Strict session cookie on success
-      │    │
-      │    │  Protected endpoints (require valid session cookie)
-      │    ├─ GET        /sse        → SSE stream; pushes chat messages as JSON in real time
-      │    ├─ GET        /history    → paginated message history (loaded on scroll-up)
-      │    ├─ GET        /channels   → list of available chat channels for the logged-in character
-      │    ├─ POST       /send       → injects a message into the game's chat input
-      │    ├─ GET        /emotes     → list of emotes available to the logged-in character
-      │    ├─ GET        /avatar     → Lodestone character avatar lookup (proxied via NetStone)
-      │    ├─ GET        /ogp        → Open Graph metadata for URL link preview cards
-      │    └─ GET/PUT    /settings   → persists filters, folders, and appearance config
-      │                                (returns 503 if no passcode has been configured yet)
-      │
-      │    Public endpoints (no auth required)
-      ├─ GET        /           → serves the React SPA (dist folder bundled into the plugin at build time)
-      └─ GET        /files/*    → static game data files (SSF font, GFD icon data, PS5 fonticon texture)
-         GET        /icon/{id}  → emote icon served as PNG from game data
-
-Browser (React + TypeScript SPA, built with Vite)
- ├─ Shows a passcode modal on load; re-prompts if a session cookie expires mid-use
- ├─ Connects to /sse SSE stream after authentication (withCredentials)
- ├─ Filter sidebar with drag-and-drop reordering (@dnd-kit/sortable)
- ├─ FFXIV Lodestone font (SSF TTF), GFD icon data, and PS5 fonticon texture loaded from the plugin server
- ├─ Avatar results cached in memory (per session)
- └─ Settings and filters persisted server-side via PUT /settings
-```
-
-</details>

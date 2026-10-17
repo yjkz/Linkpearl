@@ -7,6 +7,9 @@ import {
   MOCK_MESSAGES,
   MOCK_CHARACTERS,
   MOCK_PLAYER_AVATAR_URL,
+  MOCK_AI_SETTINGS,
+  MOCK_AI_SUGGESTIONS,
+  MOCK_AI_ACTIVITY,
   getAvatarForName,
 } from '../../mock/data';
 
@@ -21,8 +24,40 @@ const MOCK_CHARACTER_NAMES = new Set([
 
 // Settings live in-process so PUT updates round-trip back through GET.
 let mockSettings: Record<string, unknown> = { ...MOCK_SETTINGS };
+let mockLanguage: 'en' | 'zh' = 'en';
+let mockAiSettings = { ...MOCK_AI_SETTINGS };
 
 export const handlers = [
+  // ── UI language ──────────────────────────────────────────────────
+  http.get('/language', () => HttpResponse.json({ language: mockLanguage })),
+  http.put('/language', async ({ request }) => {
+    try {
+      const body = (await request.json()) as { language?: string };
+      if (body.language === 'zh' || body.language === 'en') mockLanguage = body.language;
+    } catch {
+      /* ignore malformed bodies */
+    }
+    return HttpResponse.json({ ok: true, language: mockLanguage });
+  }),
+
+  // ── AI assistant ─────────────────────────────────────────────────
+  http.get('/ai/settings', () => HttpResponse.json(mockAiSettings)),
+  http.put('/ai/settings', async ({ request }) => {
+    try {
+      mockAiSettings = (await request.json()) as typeof mockAiSettings;
+    } catch {
+      /* ignore malformed bodies */
+    }
+    return HttpResponse.json({ ok: true });
+  }),
+  http.get('/ai/suggestions', () => HttpResponse.json({ suggestions: MOCK_AI_SUGGESTIONS })),
+  http.get('/ai/activity', () => HttpResponse.json({ activity: MOCK_AI_ACTIVITY })),
+  http.post('/ai/suggestions/send', () => HttpResponse.json({ ok: true })),
+  http.post('/ai/suggestions/dismiss', () => HttpResponse.json({ ok: true })),
+  http.post('/ai/test', () =>
+    HttpResponse.json({ ok: true, latencyMs: 87, model: 'gpt-4o-mini' }),
+  ),
+
   // ── Settings ────────────────────────────────────────────────────
   http.get('/settings', () => HttpResponse.json(mockSettings)),
   http.put('/settings', async ({ request }) => {

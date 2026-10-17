@@ -18,10 +18,11 @@ export const MOCK_CHANNELS = {
 const ALL_CHANNELS = [10, 11, 12, 13, 14, 15, 16, 24, 27, 28, 29, 30, 37, 56, 57, 61, 62];
 
 export const MOCK_SETTINGS = {
+  theme: 'dark',
   fontFamily: 'Inter',
   fontSize: 14,
   italicizeSystem: true,
-  useColoredBackground: false,
+  useColoredBackground: true,
   largeLinkPreviews: false,
   sendDelayEnabled: true,
   sendDelaySeconds: 3,
@@ -114,29 +115,29 @@ const at = (s: string) => [
   { Type: 'icon' as const, IconId: 55 },
 ];
 
-export const MOCK_PLAYER_AVATAR_URL =
-  'https://img2.finalfantasyxiv.com/f/947c220d2d85889cf4681679a08135e9_781d6b3603312f6be41670afa37282e0fc0.jpg?1778724831';
+export const MOCK_PLAYER_AVATAR_URL = '/avatars/avatar0.png';
 
 export const MOCK_AVATAR_POOL = [
-  'https://img2.finalfantasyxiv.com/f/563409868c65105a64a2f44236872ff5_3ea38e723c590aabf186367e1eb7e6a1fc0.jpg?1778724164',
-  'https://img2.finalfantasyxiv.com/f/3c5b45f7b3752050a75809754fbdcc48_4a92c619bde4f34cfa77e05fef21ad85fc0.jpg?1778723989',
-  'https://img2.finalfantasyxiv.com/f/8f5af6e2695eaa7e1509f53b240b345d_7126768d768f6c6c7fed3eaee98c3a8afc0.jpg?1778723667',
-  'https://img2.finalfantasyxiv.com/f/647a31acf1cd400582311176b39d8515_87b7d447f40b06dfc7228caf195f7dcffc0.jpg?1778723518',
-  'https://img2.finalfantasyxiv.com/f/f269b7d7391fbef99fe37af529bebe80_3ea38e723c590aabf186367e1eb7e6a1fc0.jpg?1778723514',
-  'https://img2.finalfantasyxiv.com/f/74ace3fc8e8d491fa4d1bd553f8539b1_8f82f937943b6baf4c565020d5eba0ccfc0.jpg?1778723400',
-  'https://img2.finalfantasyxiv.com/f/328493cb99e33556a6fdc15681409faa_87b7d447f40b06dfc7228caf195f7dcffc0.jpg?1778723387',
-  'https://img2.finalfantasyxiv.com/f/959cf79248fce3f52f146c125a4567c4_e2bb3f9679fec6d4836fcf8abcc3eeacfc0.jpg?1778723372',
-  'https://img2.finalfantasyxiv.com/f/9e26296bd2c8ab9e815d0dc4b6da9633_b7a71d8799cf6dd75b711a7f52de6675fc0.jpg?1778723309',
-  'https://img2.finalfantasyxiv.com/f/b1f9e8a98fe358a955987faff0e48d72_b7a71d8799cf6dd75b711a7f52de6675fc0.jpg?1778723230',
-  'https://img2.finalfantasyxiv.com/f/e0d53e695df86c45bdd9414647257401_470db1bf2e865f9130531fea40b61ee4fc0.jpg?1778722865',
-  'https://img2.finalfantasyxiv.com/f/6dbcc878f13ccacfcfc6b5fe8aef54a3_4a92c619bde4f34cfa77e05fef21ad85fc0.jpg?1778722837',
-  'https://img2.finalfantasyxiv.com/f/b5cbdbe8dd3655b2c3c19c2731b4e352_3ea38e723c590aabf186367e1eb7e6a1fc0.jpg?1778722835',
-  'https://img2.finalfantasyxiv.com/f/d70d23a2c76a71ca32741ed8a7badf6a_cf768a751b1f5e355c2fd39a9ed91f3ffc0.jpg?1778722651',
-  'https://img2.finalfantasyxiv.com/f/e1f43ce4c6e850d6814381f0cc151845_7bb6b1e488f0e4f01c5314d010b60f31fc0.jpg?1778722774',
-  'https://img2.finalfantasyxiv.com/f/baccea628dc6019abc41d2def6d3c31a_3ea38e723c590aabf186367e1eb7e6a1fc0.jpg?1778722432',
+  '/avatars/avatar1.png',
+  '/avatars/avatar2.png',
+  '/avatars/avatar3.png',
+  '/avatars/avatar4.png',
+  '/avatars/avatar5.png',
 ];
 
+const AVATAR_BY_NAME: Record<string, string> = {
+  'Liora Veil': '/avatars/avatar0.png',
+  'Caelum Arke': '/avatars/avatar1.png',
+  'Nael Orenthal': '/avatars/avatar2.png',
+  'Thalise Maron': '/avatars/avatar3.png',
+  'Finn Ashwood': '/avatars/avatar4.png',
+  'Baldur Grimstone': '/avatars/avatar5.png',
+};
+
 export function getAvatarForName(name: string): string {
+  const mapped = AVATAR_BY_NAME[name];
+  if (mapped) return mapped;
+
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
@@ -310,5 +311,84 @@ export const MOCK_MESSAGES = [
     SenderWorld: 'Gungnir',
     MessagePayloads: text('Baldur Grimstone performs a victory pose.'),
     Timestamp: t(0),
+  },
+];
+
+// ── AI assistant demo data ───────────────────────────────────────
+export const MOCK_AI_SETTINGS = {
+  enabled: true,
+  apiKeySet: true,
+  apiBaseUrl: 'https://api.openai.com/v1',
+  defaultModel: 'gpt-4o-mini',
+  contextMessageCount: 20,
+  timeoutSeconds: 60,
+  agents: [
+    {
+      id: 'agent-social',
+      name: 'Social Butler',
+      systemPrompt:
+        'You are a friendly, concise party assistant in Final Fantasy XIV. Keep replies short and natural.',
+      model: '',
+      temperature: 0.7,
+      maxTokens: 300,
+    },
+  ],
+  rules: [
+    {
+      id: 'rule-party',
+      name: 'Party helper',
+      enabled: true,
+      agentId: 'agent-social',
+      mode: 'options',
+      channelTypes: [14],
+      cooldownSeconds: 10,
+      maxPerMinute: 6,
+      optionsCount: 3,
+    },
+    {
+      id: 'rule-tell',
+      name: 'Tell concierge',
+      enabled: true,
+      agentId: 'agent-social',
+      mode: 'suggestion',
+      channelTypes: [13],
+      cooldownSeconds: 5,
+      maxPerMinute: 10,
+      optionsCount: 1,
+    },
+  ],
+};
+
+export const MOCK_AI_SUGGESTIONS = [
+  {
+    id: 'suggestion-party-1',
+    ruleId: 'rule-party',
+    ruleName: 'Party helper',
+    agentName: 'Social Butler',
+    mode: 'options',
+    channelType: 14,
+    channelLabel: 'Party',
+    senderName: 'Baldur Grimstone',
+    senderWorld: 'Gungnir',
+    sourceText: 'someone toss a Phoenix Down lol',
+    candidates: [
+      'On it — Phoenix Down incoming!',
+      'I used mine on the last wipe. Anyone else have one?',
+      'Give me a sec, checking my inventory.',
+    ],
+    createdAt: Date.now() - 20_000,
+  },
+];
+
+export const MOCK_AI_ACTIVITY = [
+  {
+    timestamp: Date.now() - 60_000,
+    kind: 'auto-reply',
+    message: 'Finn Ashwood: Yes! Same time as usual works for me.',
+  },
+  {
+    timestamp: Date.now() - 180_000,
+    kind: 'info',
+    message: 'Generated a reply suggestion for a Tell from Finn Ashwood.',
   },
 ];
