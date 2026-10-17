@@ -4,7 +4,7 @@ using System.Threading.Channels;
 using Dalamud.Plugin.Services;
 using WatsonWebserver.Core;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 /// <summary>
 /// Manages SSE client connections and broadcasts events to all connected clients.

@@ -12,6 +12,7 @@ interface Props {
   activeFilter: CustomFilter | null;
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
+  onToggleAi: () => void;
   onEditFilter: (filter: CustomFilter, oldName: string) => void;
   // Messages
   filteredMessages: ChatMessage[];
@@ -49,6 +50,7 @@ export function ChatArea({
   activeFilter,
   isSidebarOpen,
   onToggleSidebar,
+  onToggleAi,
   onEditFilter,
   filteredMessages,
   bannerCount,
@@ -84,6 +86,7 @@ export function ChatArea({
         activeDmTarget={activeDmTarget}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={onToggleSidebar}
+        onToggleAi={onToggleAi}
         onEditFilter={onEditFilter}
       />
 

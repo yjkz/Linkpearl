@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
+import { useTranslation } from '../../i18n';
 import styles from './LinkConfirmModal.module.css';
 
 interface Props {
@@ -16,6 +17,7 @@ export function LinkConfirmModal({
   setTrustedDomains,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
   const handleConfirm = () => {
     if (trustDomain) {
       try {
@@ -40,34 +42,30 @@ export function LinkConfirmModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className={styles['modal-content']} onClick={(e) => e.stopPropagation()}>
         <div className={styles['modal-header']}>
-          <h3>External Link Confirmation</h3>
+          <h3>{t('link.title')}</h3>
           <button className={styles['close-btn']} onClick={onClose}>
             &times;
           </button>
         </div>
         <div className={styles['modal-body']}>
-          <p>You are about to open an external website:</p>
+          <p>{t('link.description')}</p>
           <div className={styles['link-preview-box']}>{confirmLink}</div>
-          <p className={styles['modal-warning']}>
-            Be careful of phishing or malicious sites. Only open links from trusted sources.
-          </p>
+          <p className={styles['modal-warning']}>{t('link.warning')}</p>
           <label className={styles['trust-domain-checkbox']}>
             <input
               type="checkbox"
               checked={trustDomain}
               onChange={(e) => setTrustDomain(e.target.checked)}
             />
-            <span>
-              Don't ask again for <strong>{hostname}</strong>
-            </span>
+            <span>{t('link.dontAsk', { host: hostname })}</span>
           </label>
         </div>
         <div className={styles['modal-footer']}>
           <button className="btn btn-secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button className="btn btn-primary" onClick={handleConfirm}>
-            Open Link
+            {t('link.open')}
           </button>
         </div>
       </div>

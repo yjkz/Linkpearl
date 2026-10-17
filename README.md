@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="images/icon.png" alt="ChatAnywhere icon" width="96">
-  <h1>ChatAnywhere</h1>
+  <img src="images/icon.png" alt="Linkpearl icon" width="96">
+  <h1>Linkpearl</h1>
   <p>Host your chat on a web server so you can talk from anywhere.</p>
-  <a href="https://github.com/twelvehouse/ChatAnywhere">
+  <a href="https://github.com/yjkz/ChatAnywhere">
     <img src="https://img.shields.io/endpoint?url=https://qzysathwfhebdai6xgauhz4q7m0mzmrf.lambda-url.us-east-1.on.aws/ChatAnywhere" alt="Download count">
   </a>
 </div>
@@ -14,7 +14,7 @@
   </tr></table>
 </div>
 
-ChatAnywhere is a [Dalamud](https://github.com/goatcorp/Dalamud) plugin that runs a lightweight web server inside FFXIV.
+Linkpearl is a [Dalamud](https://github.com/goatcorp/Dalamud) plugin that runs a lightweight web server inside FFXIV.
 It streams your in-game chat to any browser in real time, and lets you send messages back without switching to the game window.
 
 ---
@@ -67,6 +67,19 @@ A countdown ring shows the time remaining. Tap anywhere in the message box to ca
 URLs from trusted sites (Lodestone, YouTube, Twitter/X, Twitch, Imgur, and more) automatically render an inline preview card showing the page title, description, and thumbnail.
 YouTube links show an embedded player you can watch without leaving the chat window.
 
+### AI assistant
+
+Linkpearl can watch selected chat channels and let an OpenAI-compatible model draft or send replies.
+
+- **Agents** — create multiple agents, each with its own system prompt, model override, temperature, and token limit
+- **Trigger rules** — bind an agent to specific channels (Say, Party, FC, LS/CWLS, Tell, …)
+- **Reply modes** — `Auto reply` sends the generated reply immediately, `Multiple options` offers several clickable candidates, and `Reply suggestion` lets you edit one suggestion before sending
+- **Both UIs** — manage suggestions and settings from the browser panel or the in-game `/linkpearl ai` window
+- No tool calling: the assistant is a plain chat model
+
+Configure the API Base URL, API Key, and default model under **Settings → AI Assistant**.
+AI is disabled by default, and auto replies are rate-limited per rule.
+
 ### Link safety
 
 Clicking a URL in chat opens a confirmation dialog before leaving the page.
@@ -77,6 +90,7 @@ You can whitelist trusted domains so subsequent clicks open immediately without 
 ![Appearance settings](images/readme-appearance.png)
 
 - Switch between **Light**, **Dark**, and **System** (follows your OS) themes
+- Switch the interface language between **中文** (default) and **English** — the choice is shared with the in-game windows
 - Choose any **Google Font** for the chat window
 - Adjust **font size**
 - Toggle **italic rendering** for system messages
@@ -88,11 +102,11 @@ You can whitelist trusted domains so subsequent clicks open immediately without 
 
 ### 1. Install the plugin
 
-Open the **Dalamud Plugin Installer**, search for **ChatAnywhere**, and install it.
+Open the **Dalamud Plugin Installer**, search for **Linkpearl**, and install it.
 
 ### 2. Set a passcode
 
-Before opening the browser UI, set a **4–8 digit numeric passcode** in the plugin settings window (**ChatAnywhere → Security**).
+Before opening the browser UI, set a **4–8 digit numeric passcode** in the plugin settings window (**Linkpearl → Security**).
 This passcode protects the web interface from unauthorised access.
 
 ### 3. Open the chat UI
@@ -114,7 +128,7 @@ http://192.168.x.x:3000
 You can find your local IP by running `ipconfig` in a terminal and looking for the IPv4 address.
 
 <details>
-<summary>Accessing ChatAnywhere from outside your home network (Tailscale)</summary>
+<summary>Accessing Linkpearl from outside your home network (Tailscale)</summary>
 
 By default the server only listens on `localhost`, so it is not reachable from other devices.
 To access it from your phone or laptop while away from home, the easiest solution is **Tailscale** — a free VPN that creates a private network between your devices with zero port-forwarding setup.
@@ -142,7 +156,7 @@ No port forwarding, no firewall rules, no router configuration needed.
 
 ## Acknowledgements
 
-ChatAnywhere would not exist without these projects:
+Linkpearl would not exist without these projects:
 
 | Project | Role |
 |---|---|

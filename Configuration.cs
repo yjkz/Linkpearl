@@ -1,9 +1,10 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using Linkpearl.Core.Ai;
 using Dalamud.Configuration;
 
-namespace ChatAnywhere;
+namespace Linkpearl;
 
 [Serializable]
 public class Configuration : IPluginConfiguration
@@ -13,6 +14,19 @@ public class Configuration : IPluginConfiguration
     public bool WebinterfaceEnabled { get; set; } = true;
     public int WebinterfacePort { get; set; } = 3000;
     public string WebinterfacePasswordHash { get; set; } = "";
+
+    /// <summary>UI language shared by the in-game windows and the browser frontend: "zh" or "en".</summary>
+    public string UiLanguage { get; set; } = "zh";
+
+    // ── AI assistant ────────────────────────────────────────────────
+    public bool AiEnabled { get; set; } = false;
+    public string AiApiBaseUrl { get; set; } = "https://api.openai.com/v1";
+    public string AiApiKey { get; set; } = "";
+    public string AiDefaultModel { get; set; } = "";
+    public int AiContextMessageCount { get; set; } = 20;
+    public int AiRequestTimeoutSeconds { get; set; } = 60;
+    public List<AiAgentConfig> AiAgents { get; set; } = new();
+    public List<AiTriggerRule> AiRules { get; set; } = new();
 
     private const int SaltSize   = 16;
     private const int KeySize    = 32;

@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using WatsonWebserver.Core;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 internal static class HttpHelper
 {

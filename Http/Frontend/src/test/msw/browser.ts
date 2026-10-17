@@ -63,7 +63,7 @@ class MockEventSource extends EventTarget {
  * Called from main.tsx when `?demo` is present.
  */
 export async function installDemoMode(): Promise<void> {
-  console.info('[ChatAnywhere] Demo mode active — chat/settings are mocked.');
+  console.info('[Linkpearl] Demo mode active — chat/settings are mocked.');
   for (const key of Object.keys(sessionStorage)) {
     if (key.startsWith('avatar_')) sessionStorage.removeItem(key);
   }

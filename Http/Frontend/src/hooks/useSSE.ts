@@ -2,8 +2,11 @@ import { useEffect, useRef } from 'react';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import { RELAY_ADDR } from '../constants/config';
 import { useSessionStore } from '../store/sessionStore';
+import { useAiStore } from '../store/aiStore';
+import { useUiStore } from '../store/uiStore';
 import type { ChatMessage, ChannelOption } from '../types/chat';
 import type { SseEvent } from '../types/sse';
+import type { AiActivity, AiSuggestion } from '../types/ai';
 import type { CustomFilter } from '../types/filter';
 
 interface UseSSEOptions {
@@ -73,7 +76,35 @@ export function useSSE({
             setUnreadMap({});
             setHasUnreadDown(false);
             setPlayer('', '');
+            useAiStore.setState({ suggestions: [] });
             onReset();
+            return;
+          }
+
+          if (data.type === 'ui-language-changed') {
+            if (data.language === 'zh' || data.language === 'en') {
+              useUiStore.getState().applyServerLanguage(data.language);
+            }
+            return;
+          }
+
+          if (data.type === 'ai-suggestion') {
+            useAiStore.getState().upsertSuggestion(data.suggestion as AiSuggestion);
+            return;
+          }
+
+          if (data.type === 'ai-suggestion-removed' || data.type === 'ai-suggestion-sent') {
+            useAiStore.getState().removeSuggestion(data.id as string);
+            return;
+          }
+
+          if (data.type === 'ai-activity') {
+            useAiStore.getState().addActivity(data.entry as AiActivity);
+            return;
+          }
+
+          if (data.type === 'ai-settings-changed') {
+            void useAiStore.getState().loadSettings();
             return;
           }
 

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import styles from './FilterFolderModal.module.css';
-import { FILTER_NAME_REGEX, FILTER_NAME_ERROR } from '../../types/filter';
+import { FILTER_NAME_REGEX } from '../../types/filter';
+import { useTranslation } from '../../i18n';
 
 interface Props {
   initialName?: string;
@@ -11,12 +12,13 @@ interface Props {
 }
 
 export function FilterFolderModal({ initialName = '', existingNames, onSave, onClose }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initialName);
   const [error, setError] = useState('');
 
   const validate = (value: string): string => {
-    if (!FILTER_NAME_REGEX.test(value)) return FILTER_NAME_ERROR;
-    if (existingNames.includes(value)) return 'This name is already in use.';
+    if (!FILTER_NAME_REGEX.test(value)) return t('filter.nameError');
+    if (existingNames.includes(value)) return t('folder.nameExists');
     return '';
   };
 
@@ -34,10 +36,10 @@ export function FilterFolderModal({ initialName = '', existingNames, onSave, onC
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.title}>{isEdit ? 'Rename Folder' : 'New Folder'}</h2>
+        <h2 className={styles.title}>{isEdit ? t('folder.renameTitle') : t('folder.newTitle')}</h2>
 
         <label className={styles.label}>
-          Folder Name
+          {t('folder.name')}
           <input
             className={clsx(styles.input, error && styles['input-error'])}
             type="text"
@@ -52,20 +54,18 @@ export function FilterFolderModal({ initialName = '', existingNames, onSave, onC
             }}
             autoFocus
             maxLength={32}
-            placeholder="e.g. MyFolder"
+            placeholder={t('folder.namePlaceholder')}
           />
           {error && <span className={styles.error}>{error}</span>}
-          {!error && (
-            <span className={styles.hint}>Letters, numbers, hyphens, underscores (max 32)</span>
-          )}
+          {!error && <span className={styles.hint}>{t('folder.nameHint')}</span>}
         </label>
 
         <div className={styles.actions}>
           <button className="btn btn-secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button className="btn btn-primary" onClick={handleSave}>
-            {isEdit ? 'Rename' : 'Create'}
+            {isEdit ? t('common.rename') : t('common.create')}
           </button>
         </div>
       </div>

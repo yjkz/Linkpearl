@@ -14,8 +14,9 @@ import styles from './InputArea.module.css';
 import { ChannelSelect } from '../ChannelSelect/ChannelSelect';
 import { EmoteSymbolPicker } from '../EmoteSymbolPicker/EmoteSymbolPicker';
 import { AvatarImage } from './AvatarImage';
-import { getBadgeInfoByPrefix } from '../../lib/channelUtils';
 import { formatPlayerName } from '../../lib/formatUtils';
+import { useTranslation } from '../../i18n';
+import { useChannelLabelByPrefix } from '../../i18n/channelLabels';
 import type { ChannelOption } from '../../types/chat';
 
 const MAX_BYTES = 500;
@@ -55,6 +56,7 @@ function PendingSendBanner({
   onComplete: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const effectiveTheme = useEffectiveTheme();
   // Matches --accent per theme.
   const colors = effectiveTheme === 'dark' ? '#89b4fa' : '#4a7de6';
@@ -65,7 +67,7 @@ function PendingSendBanner({
       type="button"
       className={styles['pending-banner']}
       onClick={onCancel}
-      aria-label="Cancel pending send"
+      aria-label={t('input.cancelPending')}
     >
       <div className={styles['pending-circle']} aria-hidden>
         <CountdownCircleTimer
@@ -81,8 +83,8 @@ function PendingSendBanner({
           }}
         />
       </div>
-      <span className={styles['pending-label']}>Queued</span>
-      <span className={styles['pending-hint']}>Tap to cancel</span>
+      <span className={styles['pending-label']}>{t('input.queued')}</span>
+      <span className={styles['pending-hint']}>{t('input.tapToCancel')}</span>
     </button>
   );
 }
@@ -128,6 +130,7 @@ function ChatInputRow({
   isLocked,
   onCancelPending,
 }: ChatInputRowProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<RichTextareaHandle>(null);
   const chatFontSize = useSettingsStore((s) => s.fontSize);
   const chatFontFamily = useSettingsStore((s) => s.fontFamily);
@@ -238,8 +241,8 @@ function ChatInputRow({
           className={styles['char-picker-btn']}
           onMouseDown={(e) => e.stopPropagation()}
           onClick={onToggleCharPicker}
-          aria-label="Emotes & Symbols"
-          data-tooltip="Emotes & Symbols"
+          aria-label={t('input.emotesSymbols')}
+          data-tooltip={t('input.emotesSymbols')}
           data-picker-open={showCharPicker ? 'true' : undefined}
           disabled={isLocked}
         >
@@ -253,8 +256,8 @@ function ChatInputRow({
           onClick={onSend}
           disabled={isLocked || !inputText.trim() || !isConnected || isOverLimit}
           data-over-limit={isOverLimit ? 'true' : undefined}
-          aria-label="Send"
-          data-tooltip="Send Message"
+          aria-label={t('input.send')}
+          data-tooltip={t('input.sendMessage')}
         >
           <SendHorizontal size={16} fill="currentColor" strokeWidth={0} aria-hidden />
         </button>
@@ -265,7 +268,7 @@ function ChatInputRow({
           type="button"
           className={styles['pending-overlay']}
           onClick={onCancelPending}
-          aria-label="Cancel pending send"
+          aria-label={t('input.cancelPending')}
         />
       )}
     </div>
@@ -301,6 +304,8 @@ export function InputArea({
   onClearReply,
   onToggleReplyPin,
 }: Props) {
+  const { t } = useTranslation();
+  const channelLabelByPrefix = useChannelLabelByPrefix();
   const ctrlEnterToSend = useSettingsStore((s) => s.ctrlEnterToSend);
   const sendDelayEnabled = useSettingsStore((s) => s.sendDelayEnabled);
   const sendDelaySeconds = useSettingsStore((s) => s.sendDelaySeconds);
@@ -361,9 +366,13 @@ export function InputArea({
   const replyTargetLabel = replyTarget ? formatPlayerName(replyTarget.name, replyTarget.world) : '';
   const placeholder = isConnected
     ? inTellMode
-      ? `Tell ${replyTargetLabel}...`
-      : `Message as ${currentChannel ? getBadgeInfoByPrefix(currentChannel.prefix).label : 'chat'}...`
-    : 'Connecting to server...';
+      ? t('input.tellPlaceholder', { name: replyTargetLabel })
+      : t('input.messagePlaceholder', {
+          channel: currentChannel
+            ? channelLabelByPrefix(currentChannel.prefix)
+            : t('channel.chat'),
+        })
+    : t('input.connecting');
 
   const handleChannelChange = (prefix: string) => {
     onSendPrefixChange(prefix);
@@ -448,7 +457,7 @@ export function InputArea({
           style={theme.tellVars}
         >
           <div className={styles['tell-banner']}>
-            <span className={styles['tell-banner-label']}>Tell to</span>
+            <span className={styles['tell-banner-label']}>{t('input.tellTo')}</span>
             <div className={styles['tell-avatar']}>
               <AvatarImage name={replyTarget!.name} world={replyTarget!.world} />
             </div>
@@ -458,14 +467,12 @@ export function InputArea({
                 type="button"
                 className={clsx(styles['tell-pin-btn'], replyPinned && styles.pinned)}
                 onClick={onToggleReplyPin}
-                aria-label={
-                  replyPinned ? 'Unpin (auto-dismiss after send)' : 'Pin (keep after send)'
-                }
-                data-tooltip={replyPinned ? 'Keep after send' : 'Send once'}
+                aria-label={replyPinned ? t('input.unpin') : t('input.pin')}
+                data-tooltip={replyPinned ? t('input.keepAfterSend') : t('input.sendOnce')}
                 disabled={isPending}
               >
                 <PinIcon />
-                <span>{replyPinned ? 'Pinned' : 'Pin'}</span>
+                <span>{replyPinned ? t('input.pinned') : t('input.pinLabel')}</span>
               </button>
             )}
             {!isDmView && (
@@ -473,8 +480,8 @@ export function InputArea({
                 type="button"
                 className={styles['tell-dismiss-btn']}
                 onClick={onClearReply}
-                aria-label="Exit Tell mode"
-                data-tooltip="Cancel"
+                aria-label={t('input.exitTellMode')}
+                data-tooltip={t('common.cancel')}
                 disabled={isPending}
               >
                 ×

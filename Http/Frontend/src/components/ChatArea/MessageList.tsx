@@ -6,6 +6,7 @@ import styles from './MessageList.module.css';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { MessageItem } from './MessageItem';
 import { TELL_INCOMING, TELL_OUTGOING } from '../../constants/channels';
+import { useTranslation } from '../../i18n';
 import type { ChatMessage } from '../../types/chat';
 
 const TELL_SCAN_LIMIT = 200;
@@ -133,6 +134,7 @@ export function MessageList({
   onReply,
   disableTellRef = false,
 }: Props) {
+  const { t } = useTranslation();
   const isConnected = useSessionStore((s) => s.isConnected);
 
   const tellRefs = disableTellRef
@@ -304,10 +306,10 @@ export function MessageList({
       {bannerCount > 0 && (
         <div className={styles['unread-banner']} onClick={onDismissBanner}>
           <span>
-            {bannerCount} new message{bannerCount !== 1 ? 's' : ''}
+            {t(bannerCount === 1 ? 'messages.newOne' : 'messages.newMany', { count: bannerCount })}
           </span>
           <span className={styles.dismiss}>
-            Mark as read <span style={{ fontSize: '1rem' }}>✔</span>
+            {t('messages.markAsRead')} <span style={{ fontSize: '1rem' }}>✔</span>
           </span>
         </div>
       )}
@@ -316,10 +318,10 @@ export function MessageList({
         <RefreshCw className={styles['pull-reveal-icon']} strokeWidth={2.25} />
         <span className={styles['pull-reveal-label']}>
           <span className={styles['pull-reveal-label-text']} data-state="idle">
-            Pull to reconnect
+            {t('messages.pullToReconnect')}
           </span>
           <span className={styles['pull-reveal-label-text']} data-state="ready">
-            Release to reconnect
+            {t('messages.releaseToReconnect')}
           </span>
         </span>
       </div>
@@ -334,7 +336,7 @@ export function MessageList({
               </div>
             )}
             {isLoadingOlder && (
-              <div className={styles['loading-older']}>Loading older messages…</div>
+              <div className={styles['loading-older']}>{t('messages.loadingOlder')}</div>
             )}
 
             {messages.length === 0 && (
@@ -347,10 +349,12 @@ export function MessageList({
                       aria-hidden
                     />
                     <div className={styles['messages-empty-title']}>
-                      {filterName ? `#${filterName} is quiet` : 'Nothing here yet'}
+                      {filterName
+                        ? t('messages.filterQuiet', { name: filterName })
+                        : t('messages.nothingHere')}
                     </div>
                     <div className={styles['messages-empty-subtitle']}>
-                      Messages from the game will appear here as they arrive.
+                      {t('messages.willAppear')}
                     </div>
                   </>
                 ) : (
@@ -360,9 +364,9 @@ export function MessageList({
                       strokeWidth={1.2}
                       aria-hidden
                     />
-                    <div className={styles['messages-empty-title']}>Waiting for chat stream...</div>
+                    <div className={styles['messages-empty-title']}>{t('messages.waitingStream')}</div>
                     <div className={styles['messages-empty-subtitle']}>
-                      Make sure the plugin is running in-game.
+                      {t('messages.ensurePlugin')}
                     </div>
                   </>
                 )}
@@ -386,7 +390,7 @@ export function MessageList({
 
       {hasUnreadDown && (
         <div className={styles['unread-down-pill']} onClick={onScrollToBottom}>
-          New messages ↓
+          {t('messages.newMessagesDown')}
         </div>
       )}
     </div>

@@ -6,6 +6,8 @@ import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import { FALLBACK_CHANNEL } from '../../constants/channels';
 import { getBadgeInfoByPrefix, getChannelInfo } from '../../lib/channelUtils';
 import { useTheme } from '../../hooks/useTheme';
+import { useTranslation } from '../../i18n';
+import { useChannelLabelByPrefix } from '../../i18n/channelLabels';
 import type { ChannelOption } from '../../types/chat';
 
 const TELL_BADGE = getChannelInfo(12);
@@ -25,6 +27,8 @@ export function ChannelSelect({
   tellMode = false,
   locked = false,
 }: Props) {
+  const { t } = useTranslation();
+  const channelLabelByPrefix = useChannelLabelByPrefix();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -36,6 +40,11 @@ export function ChannelSelect({
       ? getBadgeInfoByPrefix(current.prefix)
       : FALLBACK_CHANNEL;
   const currentBadgeColor = theme.channelTextColor(currentBadge);
+  const currentLabel = tellMode
+    ? t('channel.tell')
+    : current
+      ? channelLabelByPrefix(current.prefix)
+      : t('channel.chat');
 
   useOnClickOutside(ref, () => setOpen(false), open);
 
@@ -47,7 +56,7 @@ export function ChannelSelect({
         onClick={locked ? undefined : () => setOpen((o) => !o)}
         tabIndex={locked ? -1 : 0}
         aria-disabled={locked || undefined}
-        data-tooltip={locked ? undefined : 'Switch Channel'}
+        data-tooltip={locked ? undefined : t('channelSelect.switchChannel')}
         data-tooltip-pos="top"
         data-picker-open={open ? 'true' : undefined}
       >
@@ -63,7 +72,7 @@ export function ChannelSelect({
             borderColor: 'transparent',
           }}
         >
-          {currentBadge.label}
+          {currentLabel}
         </span>
         {locked ? (
           <Lock
@@ -90,6 +99,7 @@ export function ChannelSelect({
             const badge = getBadgeInfoByPrefix(ch.prefix);
             const badgeColor = theme.channelTextColor(badge);
             const active = ch.prefix === value;
+            const label = channelLabelByPrefix(ch.prefix);
             return (
               <button
                 key={ch.prefix}
@@ -105,9 +115,9 @@ export function ChannelSelect({
                 }}
               >
                 <span className={styles['ch-select-item-badge']} style={{ color: badgeColor }}>
-                  {badge.label}
+                  {label}
                 </span>
-                <span className={styles['ch-select-item-label']}>{ch.label}</span>
+                <span className={styles['ch-select-item-label']}>{label}</span>
                 {active && (
                   <Check
                     className={styles['ch-select-check']}

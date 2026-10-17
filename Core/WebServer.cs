@@ -3,7 +3,7 @@ using WatsonWebserver.Core;
 using WatsonWebserver.Lite;
 using HttpMethod = WatsonWebserver.Core.HttpMethod;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 public class WebServer : IAsyncDisposable
 {
@@ -26,6 +26,8 @@ public class WebServer : IAsyncDisposable
     private readonly OgpHandler _ogp;
     private readonly GameFileHandler _gameFiles;
     private readonly StaticFileHandler _staticFiles;
+    private readonly LanguageHandler _language;
+    private readonly AiHandler _ai;
 
     public WebServer(Plugin plugin, ChatSender sender, ChatReceiver receiver, IPluginLog log)
     {
@@ -42,8 +44,13 @@ public class WebServer : IAsyncDisposable
         _ogp         = new OgpHandler(log, _auth);
         _gameFiles   = new GameFileHandler(plugin, log, _auth);
         _staticFiles = new StaticFileHandler(plugin, _gameFiles);
+        _language    = new LanguageHandler(plugin, log, _auth, language => _sse.BroadcastUiLanguage(language));
+        _ai          = new AiHandler(plugin, log, _auth, plugin.Ai, () => _sse.BroadcastAiSettingsChanged());
 
         _receiver.OnMessageReceived += _sse.OnChatMessageReceived;
+        plugin.Ai.SuggestionAdded   += _sse.OnAiSuggestionAdded;
+        plugin.Ai.SuggestionRemoved += _sse.OnAiSuggestionRemoved;
+        plugin.Ai.ActivityAdded     += _sse.OnAiActivity;
     }
 
     public void Start()
@@ -84,10 +91,24 @@ public class WebServer : IAsyncDisposable
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/settings/filter-mode", _settings.HandleGetFilterMode,            ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.POST,    "/settings/filter-mode", _settings.HandleEnablePersonalFilters,    ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.DELETE,  "/settings/filter-mode", _settings.HandleDisablePersonalFilters,   ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.OPTIONS, "/language", _auth.HandleCorsPreflight, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/language", _language.HandleGetLanguage, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.PUT,     "/language", _language.HandlePutLanguage, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.OPTIONS, "/ai/settings", _auth.HandleCorsPreflight, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/ai/settings", _ai.HandleGetSettings, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.PUT,     "/ai/settings", _ai.HandlePutSettings, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.OPTIONS, "/ai/test", _auth.HandleCorsPreflight, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.POST,    "/ai/test", _ai.HandleTest, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/ai/suggestions", _ai.HandleGetSuggestions, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/ai/activity", _ai.HandleGetActivity, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.OPTIONS, "/ai/suggestions/send", _auth.HandleCorsPreflight, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.POST,    "/ai/suggestions/send", _ai.HandleSendSuggestion, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.OPTIONS, "/ai/suggestions/dismiss", _auth.HandleCorsPreflight, ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.POST,    "/ai/suggestions/dismiss", _ai.HandleDismissSuggestion, ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/files/gfdata.gfd",              _gameFiles.GetGfdData,       ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/files/fonticon_ps5.tex",        _gameFiles.GetTexData,       ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/files/FFXIV_Lodestone_SSF.ttf", _gameFiles.GetLodestoneFont, ExceptionRoute);
-            _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/files/ChatAnywhere_Symbols.ttf", _gameFiles.GetSymbolFont,   ExceptionRoute);
+            _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/files/Linkpearl_Symbols.ttf", _gameFiles.GetSymbolFont,   ExceptionRoute);
             _host.Routes.PreAuthentication.Static.Add(HttpMethod.GET,     "/emotes",   _gameFiles.HandleGetEmotes,       ExceptionRoute);
 
             _host.Events.Logger = msg => _log.Debug($"[Watson] {msg}");
@@ -134,6 +155,9 @@ public class WebServer : IAsyncDisposable
         _host?.Stop();
 
         _receiver.OnMessageReceived -= _sse.OnChatMessageReceived;
+        _plugin.Ai.SuggestionAdded   -= _sse.OnAiSuggestionAdded;
+        _plugin.Ai.SuggestionRemoved -= _sse.OnAiSuggestionRemoved;
+        _plugin.Ai.ActivityAdded     -= _sse.OnAiActivity;
         _receiver.Dispose();
         _ogp.Dispose();
         await _sseManager.DisposeAsync().ConfigureAwait(false);
@@ -151,6 +175,8 @@ public class WebServer : IAsyncDisposable
     public void RefreshEmoteList()                             => _gameFiles.RefreshEmoteList();
     public void InvalidateAllSessions()                        => _auth.InvalidateAllSessions();
     public string GetCurrentGameChannelPrefix()                => _chat.GetCurrentGameChannelPrefix();
+    public void NotifyAiSettingsChanged()                      => _sse.BroadcastAiSettingsChanged();
+    public void NotifyUiLanguageChanged()                      => _sse.BroadcastUiLanguage(_plugin.Config.UiLanguage);
 
     // ────────────────────────────────────────────────────────────────
 

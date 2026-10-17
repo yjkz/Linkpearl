@@ -1,6 +1,6 @@
 using System.IO.Compression;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 /// <summary>
 /// Minimal PNG encoder. Converts B8G8R8A8 (BGRA) pixel data to a PNG byte array.

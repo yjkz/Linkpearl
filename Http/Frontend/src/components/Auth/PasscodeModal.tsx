@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import clsx from 'clsx';
 import { Lock } from 'lucide-react';
 import type { AuthResult, AuthStatus } from '../../hooks/useAuth';
+import { useTranslation } from '../../i18n';
 import styles from './PasscodeModal.module.css';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function PasscodeModal({ status, onAuthenticate }: Props) {
+  const { t } = useTranslation();
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,13 +44,13 @@ export function PasscodeModal({ status, onAuthenticate }: Props) {
     const result = await onAuthenticate(passcode);
     setIsSubmitting(false);
     if (result === 'wrong') {
-      setError('Incorrect passcode. Please try again.');
+      setError(t('auth.incorrect'));
       setPasscode('');
       setTimeout(() => inputRef.current?.focus(), 0);
     } else if (result === 'not-configured') {
-      setError('No passcode is set. Please configure one in the plugin settings.');
+      setError(t('auth.noPasscode'));
     } else if (result === 'error') {
-      setError('Connection failed. Make sure the plugin is running.');
+      setError(t('auth.connectionFailed'));
     }
   };
 
@@ -72,12 +74,12 @@ export function PasscodeModal({ status, onAuthenticate }: Props) {
           <Lock size={36} strokeWidth={1.8} aria-hidden />
         </div>
 
-        <h1 className={styles.title}>ChatAnywhere</h1>
+        <h1 className={styles.title}>Linkpearl</h1>
 
         {isConnecting && (
           <div className={styles.connecting}>
             <p className={styles.connectingText}>
-              {status === 'unreachable' ? 'Could not reach plugin — retrying…' : 'Connecting…'}
+              {status === 'unreachable' ? t('auth.couldNotReach') : t('auth.connecting')}
             </p>
             <div className={styles.connectingDots}>
               <span />
@@ -90,9 +92,7 @@ export function PasscodeModal({ status, onAuthenticate }: Props) {
         <div className={clsx(styles.formBody, formRevealed && styles.formRevealed)}>
           <div className={styles.formBodyInner}>
             <p className={styles.subtitle}>
-              {isNotConfigured
-                ? 'Plugin configuration required'
-                : 'Enter your passcode to continue'}
+              {isNotConfigured ? t('auth.pluginConfigRequired') : t('auth.enterPasscode')}
             </p>
 
             {!isNotConfigured && (
@@ -123,15 +123,12 @@ export function PasscodeModal({ status, onAuthenticate }: Props) {
                 onClick={handleSubmit}
                 disabled={passcode.length < 4 || isSubmitting}
               >
-                {isSubmitting ? 'Verifying…' : 'Unlock'}
+                {isSubmitting ? t('auth.verifying') : t('auth.unlock')}
               </button>
             )}
 
             {isNotConfigured && (
-              <p className={styles.hint}>
-                Open the plugin settings in FFXIV and set a 4–8 digit passcode under Security, then
-                reload this page.
-              </p>
+              <p className={styles.hint}>{t('auth.hint')}</p>
             )}
           </div>
         </div>

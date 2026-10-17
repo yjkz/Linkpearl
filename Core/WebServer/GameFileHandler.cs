@@ -2,7 +2,7 @@ using System.Text.Json;
 using Dalamud.Plugin.Services;
 using WatsonWebserver.Core;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 internal class GameFileHandler
 {

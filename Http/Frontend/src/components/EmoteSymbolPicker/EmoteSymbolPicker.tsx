@@ -4,12 +4,13 @@ import styles from './EmoteSymbolPicker.module.css';
 import { EmoteTab } from './EmoteTab';
 import { SymbolsTab } from './SymbolsTab';
 import { useEmoteList } from '../../hooks/useEmoteList';
+import { useTranslation } from '../../i18n';
 
 type ActiveTab = 'emotes' | 'symbols';
 
-const TABS: { id: ActiveTab; label: string }[] = [
-  { id: 'emotes', label: 'Emotes' },
-  { id: 'symbols', label: 'Symbols' },
+const TABS: { id: ActiveTab; labelKey: 'emote.emotes' | 'emote.symbols' }[] = [
+  { id: 'emotes', labelKey: 'emote.emotes' },
+  { id: 'symbols', labelKey: 'emote.symbols' },
 ];
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function EmoteSymbolPicker({ onInsert, onExecute }: Props) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ActiveTab>('emotes');
   const { emotes, loading, error } = useEmoteList();
 
@@ -33,7 +35,7 @@ export function EmoteSymbolPicker({ onInsert, onExecute }: Props) {
             className={clsx(styles['tab-btn'], activeTab === tab.id && styles.active)}
             onClick={() => setActiveTab(tab.id)}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>

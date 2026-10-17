@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { Folder, Filter } from 'lucide-react';
 import styles from './ImportFiltersModal.module.css';
 import { RELAY_ADDR } from '../../constants/config';
+import { useTranslation } from '../../i18n';
 import type { CustomFilter, FilterFolder } from '../../types/filter';
 
 interface CharacterData {
@@ -38,6 +39,7 @@ const FilterIcon = () => (
 );
 
 export function ImportFiltersModal({ currentFilters, currentFolders, onImport, onClose }: Props) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>('char-select');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
@@ -181,10 +183,10 @@ export function ImportFiltersModal({ currentFilters, currentFolders, onImport, o
 
   const stepTitle =
     step === 'char-select'
-      ? 'Import Filters'
+      ? t('import.titleChar')
       : step === 'filter-select'
-        ? 'Select Filters to Import'
-        : 'Resolve Folder Conflicts';
+        ? t('import.titleSelect')
+        : t('import.titleConflict');
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -200,16 +202,13 @@ export function ImportFiltersModal({ currentFilters, currentFolders, onImport, o
           {/* ── Step 1: Character select ── */}
           {step === 'char-select' && (
             <>
-              <p className={styles.description}>
-                Select a character to import filters from. The selected filters will be added to{' '}
-                <strong>this character&apos;s settings</strong>.
-              </p>
-              {loading && <p className={styles['state-message']}>Loading…</p>}
+              <p className={styles.description}>{t('import.description')}</p>
+              {loading && <p className={styles['state-message']}>{t('common.loading')}</p>}
               {fetchError && (
-                <p className={styles['state-message']}>Failed to load character settings.</p>
+                <p className={styles['state-message']}>{t('import.loadFailed')}</p>
               )}
               {!loading && !fetchError && characters.length === 0 && (
-                <p className={styles['state-message']}>No other character settings found.</p>
+                <p className={styles['state-message']}>{t('import.noCharacters')}</p>
               )}
               {!loading && !fetchError && characters.length > 0 && (
                 <div className={styles['char-list']}>
@@ -235,7 +234,7 @@ export function ImportFiltersModal({ currentFilters, currentFolders, onImport, o
           {step === 'filter-select' && selectedCharacter && (
             <>
               {selectedCharacter.filters.length === 0 ? (
-                <p className={styles['state-message']}>This character has no filters to import.</p>
+                <p className={styles['state-message']}>{t('import.noFilters')}</p>
               ) : (
                 <div className={styles.tree}>
                   {selectedCharacter.folders.map((folder) => {
@@ -278,7 +277,7 @@ export function ImportFiltersModal({ currentFilters, currentFolders, onImport, o
                   {orphanFilters.length > 0 && (
                     <>
                       {selectedCharacter.folders.length > 0 && (
-                        <div className={styles['orphan-title']}>OTHER FILTERS</div>
+                        <div className={styles['orphan-title']}>{t('import.otherFilters')}</div>
                       )}
                       {orphanFilters.map((f) => (
                         <div
@@ -303,15 +302,13 @@ export function ImportFiltersModal({ currentFilters, currentFolders, onImport, o
           {/* ── Step 3: Conflict resolution ── */}
           {step === 'conflict' && (
             <>
-              <p className={styles.description}>
-                The following folders already exist. Choose how to handle each one.
-              </p>
+              <p className={styles.description}>{t('import.conflictDescription')}</p>
               {conflictingFolders.map((name) => {
                 const renamed = uniqueName(name, new Set(currentFolders.map((f) => f.name)));
                 return (
                   <div key={name} className={styles['conflict-item']}>
                     <div className={styles['conflict-name']}>
-                      &ldquo;{name}&rdquo; already exists
+                      {t('import.alreadyExists', { name })}
                     </div>
                     <div className={styles['conflict-options']}>
                       <label className={styles['conflict-option']}>
@@ -323,10 +320,10 @@ export function ImportFiltersModal({ currentFilters, currentFolders, onImport, o
                         />
                         <div>
                           <div className={styles['conflict-option-label']}>
-                            Merge into existing folder
+                            {t('import.merge')}
                           </div>
                           <div className={styles['conflict-option-hint']}>
-                            Add imported filters into the existing &ldquo;{name}&rdquo; folder
+                            {t('import.mergeHint', { name })}
                           </div>
                         </div>
                       </label>
@@ -339,10 +336,10 @@ export function ImportFiltersModal({ currentFilters, currentFolders, onImport, o
                         />
                         <div>
                           <div className={styles['conflict-option-label']}>
-                            Import as new folder
+                            {t('import.rename')}
                           </div>
                           <div className={styles['conflict-option-hint']}>
-                            Create as &ldquo;{renamed}&rdquo;
+                            {t('import.renameHint', { name: renamed })}
                           </div>
                         </div>
                       </label>
@@ -358,38 +355,38 @@ export function ImportFiltersModal({ currentFilters, currentFolders, onImport, o
           {step === 'char-select' && (
             <>
               <button className="btn btn-secondary" onClick={onClose}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 className="btn btn-primary"
                 disabled={!selectedKey}
                 onClick={() => setStep('filter-select')}
               >
-                Next →
+                {t('common.next')}
               </button>
             </>
           )}
           {step === 'filter-select' && (
             <>
               <button className="btn btn-secondary" onClick={() => setStep('char-select')}>
-                ← Back
+                {t('common.back')}
               </button>
               <button
                 className="btn btn-primary"
                 disabled={selectedFilters.size === 0}
                 onClick={handleProceed}
               >
-                Import
+                {t('common.import')}
               </button>
             </>
           )}
           {step === 'conflict' && (
             <>
               <button className="btn btn-secondary" onClick={() => setStep('filter-select')}>
-                ← Back
+                {t('common.back')}
               </button>
               <button className="btn btn-primary" onClick={() => applyImport(resolutions)}>
-                Import
+                {t('common.import')}
               </button>
             </>
           )}

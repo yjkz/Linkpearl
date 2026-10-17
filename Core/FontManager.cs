@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 public class FontManager
 {
@@ -39,7 +39,7 @@ public class FontManager
             var hash = Convert.ToHexString(sha.Hash!)[..16].ToLowerInvariant();
 
             var dir = PluginInterface.ConfigDirectory.FullName;
-            var path = Path.Combine(dir, $"ChatAnywhere_Symbols.{hash}.ttf");
+            var path = Path.Combine(dir, $"Linkpearl_Symbols.{hash}.ttf");
             if (File.Exists(path))
             {
                 SymbolFontPath = path;
@@ -51,7 +51,7 @@ public class FontManager
             WriteAtomic(path, font);
             SymbolFontPath = path;
 
-            foreach (var old in Directory.GetFiles(dir, "ChatAnywhere_Symbols.*.ttf"))
+            foreach (var old in Directory.GetFiles(dir, "Linkpearl_Symbols.*.ttf"))
             {
                 if (old == path) continue;
                 try

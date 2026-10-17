@@ -5,6 +5,7 @@ import styles from './EmoteTab.module.css';
 import type { Emote } from '../../hooks/useEmoteList';
 import { RELAY_ADDR } from '../../constants/config';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useTranslation } from '../../i18n';
 
 interface Props {
   emotes: Emote[];
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function EmoteTab({ emotes, loading, error, onExecute }: Props) {
+  const { t } = useTranslation();
   const emoteConfirm = useSettingsStore((s) => s.emoteConfirm);
   const emoteSortByName = useSettingsStore((s) => s.emoteSortByName);
   const [search, setSearch] = useState('');
@@ -104,7 +106,7 @@ export function EmoteTab({ emotes, loading, error, onExecute }: Props) {
         <span className={styles['emote-icon-fallback']} style={{ display: 'none' }} aria-hidden />
         <span className={styles['emote-name']}>{emote.name}</span>
         <span className={styles['emote-command']}>{emote.command}</span>
-        {isPendingRow && <span className={styles['emote-play']}>Perform</span>}
+        {isPendingRow && <span className={styles['emote-play']}>{t('emote.perform')}</span>}
       </button>
     );
   };
@@ -119,7 +121,7 @@ export function EmoteTab({ emotes, loading, error, onExecute }: Props) {
           <input
             type="text"
             className={styles['search-input']}
-            placeholder="Search emotes..."
+            placeholder={t('emote.search')}
             value={search}
             onChange={(e) => {
               const val = e.target.value;
@@ -134,7 +136,7 @@ export function EmoteTab({ emotes, loading, error, onExecute }: Props) {
             <button
               type="button"
               className={styles['clear-btn']}
-              aria-label="Clear search"
+              aria-label={t('emote.clearSearch')}
               onClick={() => {
                 setSearch('');
                 setPendingKey(null);
@@ -150,9 +152,9 @@ export function EmoteTab({ emotes, loading, error, onExecute }: Props) {
         <button
           type="button"
           className={styles['log-toggle-wrapper']}
-          aria-label="Emote Log"
+          aria-label={t('emote.log')}
           aria-pressed={logOutput}
-          data-tooltip="Emote Log"
+          data-tooltip={t('emote.log')}
           onClick={() => setLogOutput((v) => !v)}
         >
           <FileText className={styles['log-icon']} size={14} strokeWidth={1.5} aria-hidden />
@@ -176,18 +178,18 @@ export function EmoteTab({ emotes, loading, error, onExecute }: Props) {
               <div className={styles['skeleton-command']} />
             </div>
           ))}
-        {error && <div className={styles['emote-empty']}>Failed to load emotes.</div>}
+        {error && <div className={styles['emote-empty']}>{t('emote.failed')}</div>}
         {!loading && !error && (
           <>
             {showHistory && (
               <>
-                <div className={styles['history-heading']}>Recent</div>
+                <div className={styles['history-heading']}>{t('emote.recent')}</div>
                 {historyEmotes.map((emote) => renderRow(emote, 'history'))}
                 <div className={styles['history-divider']} />
               </>
             )}
             {filtered.length === 0 ? (
-              <div className={styles['emote-empty']}>No emotes found</div>
+              <div className={styles['emote-empty']}>{t('emote.none')}</div>
             ) : (
               filtered.map((emote) => renderRow(emote, 'main'))
             )}

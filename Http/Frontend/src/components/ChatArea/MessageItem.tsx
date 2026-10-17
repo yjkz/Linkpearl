@@ -13,6 +13,7 @@ import {
   getHostname,
 } from '../../constants/trustedDomains';
 import { TELL_INCOMING, TELL_OUTGOING } from '../../constants/channels';
+import { useChannelLabel } from '../../i18n/channelLabels';
 import type { ChatMessage } from '../../types/chat';
 
 function extractUrls(msg: ChatMessage): string[] {
@@ -67,6 +68,7 @@ export function MessageItem({
   const storeTellModeAll = useSettingsStore((s) => s.tellModeAll);
   const storeLargePreviews = useSettingsStore((s) => s.largeLinkPreviews);
   const trustedDomains = useSettingsStore((s) => s.trustedDomains);
+  const channelLabel = useChannelLabel();
   const theme = useTheme();
   const italicizeSystem = italicizeSystemProp ?? storeItalicize;
   const useColoredBackground = useColoredBackgroundProp ?? storeColored;
@@ -151,7 +153,7 @@ export function MessageItem({
           {!hideHeader && (
             <div className="message-header">
               <span className="channel-badge" style={theme.badgeStyle(ch)}>
-                {ch.label}
+                {channelLabel(msg.Type)}
               </span>
               {hasAuthor && (
                 <span className="message-author" style={{ color: theme.channelTextColor(ch) }}>

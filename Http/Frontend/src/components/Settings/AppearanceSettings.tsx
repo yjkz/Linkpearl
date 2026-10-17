@@ -4,6 +4,8 @@ import styles from './AppearanceSettings.module.css';
 import { FONTS } from '../../constants/config';
 import { MessageItem } from '../ChatArea/MessageItem';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useUiStore } from '../../store/uiStore';
+import { useTranslation } from '../../i18n';
 
 // Static preview messages — defined at module level to avoid purity lint warnings
 const PREVIEW_BASE_TIME = Date.now();
@@ -32,6 +34,9 @@ const PREVIEW_EMOTE: ChatMessage = {
 const NOOP = () => {};
 
 export function AppearanceSettings() {
+  const { t } = useTranslation();
+  const language = useUiStore((s) => s.language);
+  const setLanguage = useUiStore((s) => s.setLanguage);
   const theme = useSettingsStore((s) => s.theme);
   const setTheme = useSettingsStore((s) => s.setTheme);
   const fontFamily = useSettingsStore((s) => s.fontFamily);
@@ -46,6 +51,19 @@ export function AppearanceSettings() {
   const setLargeLinkPreviews = useSettingsStore((s) => s.setLargeLinkPreviews);
   return (
     <>
+      <div className="form-section">
+        <div className="form-section-title">{t('appearance.language')}</div>
+        <p>{t('appearance.languageDescription')}</p>
+        <select
+          className="form-select"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as 'zh' | 'en')}
+        >
+          <option value="zh">中文</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
       <div className="form-section">
         <MessageItem
           msg={PREVIEW_SHOUT}
@@ -68,8 +86,8 @@ export function AppearanceSettings() {
       </div>
 
       <div className="form-section">
-        <div className="form-section-title">THEME</div>
-        <div className={styles['theme-radio-group']} role="radiogroup" aria-label="Theme">
+        <div className="form-section-title">{t('appearance.theme')}</div>
+        <div className={styles['theme-radio-group']} role="radiogroup" aria-label={t('appearance.theme')}>
           {(['light', 'dark', 'system'] as const).map((mode) => (
             <button
               key={mode}
@@ -79,25 +97,26 @@ export function AppearanceSettings() {
               className={clsx(styles['theme-radio'], theme === mode && styles.active)}
               onClick={() => setTheme(mode)}
             >
-              {mode === 'light' ? 'Light' : mode === 'dark' ? 'Dark' : 'System'}
+              {mode === 'light'
+                ? t('appearance.light')
+                : mode === 'dark'
+                  ? t('appearance.dark')
+                  : t('appearance.system')}
             </button>
           ))}
         </div>
       </div>
 
       <div className="form-section">
-        <div className="form-section-title">FONT</div>
-        <p>
-          Change the main text font. FFXIV special characters use a dedicated font regardless of
-          this setting.
-        </p>
+        <div className="form-section-title">{t('appearance.font')}</div>
+        <p>{t('appearance.fontDescription')}</p>
         <div className={styles['font-input-container']}>
           <input
             list="font-list"
             className="form-input"
             value={fontFamily}
             onChange={(e) => setFontFamily(e.target.value)}
-            placeholder="Font name (e.g. Noto Sans JP)"
+            placeholder={t('appearance.fontPlaceholder')}
           />
           <datalist id="font-list">
             {FONTS.map((f) => (
@@ -107,7 +126,7 @@ export function AppearanceSettings() {
         </div>
 
         <div className="form-row">
-          <span className="form-row-label">Size</span>
+          <span className="form-row-label">{t('appearance.size')}</span>
           <div
             style={{
               display: 'flex',
@@ -137,7 +156,7 @@ export function AppearanceSettings() {
           style={{ cursor: 'pointer' }}
           onClick={() => setItalicizeSystem(!italicizeSystem)}
         >
-          <span className="form-row-label">Italicize System & Emote</span>
+          <span className="form-row-label">{t('appearance.italicize')}</span>
           <div className={clsx('toggle-switch', italicizeSystem && 'on')}>
             <div className="toggle-knob" />
           </div>
@@ -145,13 +164,13 @@ export function AppearanceSettings() {
       </div>
 
       <div className="form-section">
-        <div className="form-section-title">DISPLAY</div>
+        <div className="form-section-title">{t('appearance.display')}</div>
         <div
           className="form-row"
           style={{ cursor: 'pointer' }}
           onClick={() => setUseColoredBackground(!useColoredBackground)}
         >
-          <span className="form-row-label">Colorize backgrounds by type</span>
+          <span className="form-row-label">{t('appearance.colorizeBackgrounds')}</span>
           <div className={clsx('toggle-switch', useColoredBackground && 'on')}>
             <div className="toggle-knob" />
           </div>
@@ -162,7 +181,7 @@ export function AppearanceSettings() {
           style={{ cursor: 'pointer' }}
           onClick={() => setLargeLinkPreviews(!largeLinkPreviews)}
         >
-          <span className="form-row-label">Large link previews</span>
+          <span className="form-row-label">{t('appearance.largeLinkPreviews')}</span>
           <div className={clsx('toggle-switch', largeLinkPreviews && 'on')}>
             <div className="toggle-knob" />
           </div>

@@ -4,7 +4,7 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Plugin.Services;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 // Custom DTO for easy serialization
 public class ReceivedChatMessage

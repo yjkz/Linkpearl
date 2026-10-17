@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styles from './FilterModeModal.module.css';
 import type { FilterMode } from '../../hooks/useFilterMode';
+import { useTranslation } from '../../i18n';
 
 interface Props {
   filterMode: FilterMode;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function FilterModeModal({ filterMode, onEnable, onDisable, onClose }: Props) {
+  const { t } = useTranslation();
   const [overwrite, setOverwrite] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -38,17 +40,14 @@ export function FilterModeModal({ filterMode, onEnable, onDisable, onClose }: Pr
     return (
       <div className="modal-overlay" onClick={onClose}>
         <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
-          <p className={styles.title}>Switch to shared filters?</p>
-          <p className={styles.body}>
-            This character will use the shared filter settings. The personal settings will be kept
-            but not used.
-          </p>
+          <p className={styles.title}>{t('filterMode.sharedTitle')}</p>
+          <p className={styles.body}>{t('filterMode.sharedBody')}</p>
           <div className={styles.actions}>
             <button className="btn btn-secondary" onClick={onClose} disabled={busy}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button className="btn btn-primary" onClick={handleDisable} disabled={busy}>
-              {busy ? 'Switching…' : 'Use Shared Filters'}
+              {busy ? t('common.switching') : t('filterMode.useShared')}
             </button>
           </div>
         </div>
@@ -59,11 +58,11 @@ export function FilterModeModal({ filterMode, onEnable, onDisable, onClose }: Pr
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
-        <p className={styles.title}>Switch to personal filters?</p>
+        <p className={styles.title}>{t('filterMode.personalTitle')}</p>
         <p className={styles.body}>
           {filterMode.hasExistingFile
-            ? 'This character will use its own personal filter settings, separate from the shared filters.'
-            : 'This character will use its own personal filter settings. The current shared filters will be copied as a starting point.'}
+            ? t('filterMode.personalBodyExisting')
+            : t('filterMode.personalBodyNew')}
         </p>
 
         {filterMode.hasExistingFile && (
@@ -73,16 +72,16 @@ export function FilterModeModal({ filterMode, onEnable, onDisable, onClose }: Pr
               checked={overwrite}
               onChange={(e) => setOverwrite(e.target.checked)}
             />
-            <span className={styles['toggle-label']}>Overwrite with current shared filters</span>
+            <span className={styles['toggle-label']}>{t('filterMode.overwrite')}</span>
           </label>
         )}
 
         <div className={styles.actions}>
           <button className="btn btn-secondary" onClick={onClose} disabled={busy}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button className="btn btn-primary" onClick={handleEnable} disabled={busy}>
-            {busy ? 'Switching…' : 'Use Personal Filters'}
+            {busy ? t('common.switching') : t('filterMode.usePersonal')}
           </button>
         </div>
       </div>

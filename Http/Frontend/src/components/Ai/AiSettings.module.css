@@ -1,0 +1,131 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgb(255 99 99 / 40%);
+  background: rgb(255 99 99 / 10%);
+  color: #ff8484;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.fieldLabel {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.inlineFields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.listHeader select {
+  flex: 1;
+}
+
+.editor {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+
+.textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 90px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  padding: 8px;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.range {
+  width: 100%;
+}
+
+.testRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.testOk {
+  color: #6bd67b;
+  font-size: 0.8rem;
+}
+
+.testFailed {
+  color: #ff8484;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.channelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 4px 10px;
+  margin-top: 4px;
+}
+
+.channelItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.saved {
+  color: #6bd67b;
+  font-size: 0.8rem;
+}

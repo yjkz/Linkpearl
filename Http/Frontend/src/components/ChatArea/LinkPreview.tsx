@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { ExternalLink } from 'lucide-react';
 import styles from './LinkPreview.module.css';
 import { RELAY_ADDR } from '../../constants/config';
+import { useTranslation } from '../../i18n';
 
 interface OgpData {
   title: string | null;
@@ -125,6 +126,7 @@ interface YouTubeCardProps {
 }
 
 export function YouTubeCard({ videoId, url }: YouTubeCardProps) {
+  const { t } = useTranslation();
   const [loaded, setLoaded] = useState(false);
   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
@@ -134,7 +136,7 @@ export function YouTubeCard({ videoId, url }: YouTubeCardProps) {
         <div className={styles['youtube-wrapper']}>
           <iframe
             src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-            title="YouTube video"
+            title={t('link.youtubeVideo')}
             allow="autoplay; encrypted-media; picture-in-picture"
             allowFullScreen
           />
@@ -158,9 +160,9 @@ export function YouTubeCard({ videoId, url }: YouTubeCardProps) {
           e.stopPropagation();
           setLoaded(true);
         }}
-        aria-label="Play YouTube video"
+        aria-label={t('link.playYoutube')}
       >
-        <img src={thumbnailUrl} alt="YouTube thumbnail" className={styles['ogp-image']} />
+        <img src={thumbnailUrl} alt={t('link.youtubeThumbnail')} className={styles['ogp-image']} />
         <div className={styles['youtube-play']}>
           <svg viewBox="0 0 68 48" width="68" height="48">
             <path
@@ -179,9 +181,9 @@ export function YouTubeCard({ videoId, url }: YouTubeCardProps) {
           e.stopPropagation();
           window.open(url, '_blank', 'noopener,noreferrer');
         }}
-        aria-label="Open in YouTube"
+        aria-label={t('link.openYoutube')}
       >
-        Open in YouTube
+        {t('link.openYoutube')}
         <ExternalLinkIcon />
       </a>
     </div>

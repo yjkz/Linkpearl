@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.Text;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 internal static class TtfWriter
 {
@@ -12,8 +12,8 @@ internal static class TtfWriter
         short TypoAscender, short TypoDescender, short TypoLineGap,
         int WinAscent, int WinDescent);
 
-    private const string FamilyName = "ChatAnywhere Symbols";
-    private const string PostScriptName = "ChatAnywhereSymbols-Regular";
+    private const string FamilyName = "Linkpearl Symbols";
+    private const string PostScriptName = "LinkpearlSymbols-Regular";
 
     public static byte[] Write(List<Glyph> glyphs, int unitsPerEm, VerticalMetrics vm)
     {

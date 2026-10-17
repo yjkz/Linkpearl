@@ -1,8 +1,10 @@
 import clsx from 'clsx';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useTranslation } from '../../i18n';
 import styles from './OthersSettings.module.css';
 
 export function OthersSettings() {
+  const { t } = useTranslation();
   const tellModeAll = useSettingsStore((s) => s.tellModeAll);
   const ctrlEnterToSend = useSettingsStore((s) => s.ctrlEnterToSend);
   const emoteConfirm = useSettingsStore((s) => s.emoteConfirm);
@@ -22,12 +24,12 @@ export function OthersSettings() {
   return (
     <>
       <div className="form-section">
-        <div className="form-section-title">MESSAGE</div>
+        <div className="form-section-title">{t('others.message')}</div>
         <div
           className={clsx('form-row', styles['clickable-row'])}
           onClick={() => setTellModeAll(!tellModeAll)}
         >
-          <span className="form-row-label">Enable Tell mode for all messages</span>
+          <span className="form-row-label">{t('others.tellModeAll')}</span>
           <div className={clsx('toggle-switch', tellModeAll && 'on')}>
             <div className="toggle-knob" />
           </div>
@@ -36,7 +38,7 @@ export function OthersSettings() {
           className={clsx('form-row', styles['clickable-row'])}
           onClick={() => setCtrlEnterToSend(!ctrlEnterToSend)}
         >
-          <span className="form-row-label">Send message with Ctrl+Enter only</span>
+          <span className="form-row-label">{t('others.ctrlEnter')}</span>
           <div className={clsx('toggle-switch', ctrlEnterToSend && 'on')}>
             <div className="toggle-knob" />
           </div>
@@ -45,21 +47,19 @@ export function OthersSettings() {
           className={clsx('form-row', styles['clickable-row'])}
           onClick={() => setSendDelayEnabled(!sendDelayEnabled)}
         >
-          <span className="form-row-label">
-            Queue messages before sending (tap input to cancel)
-          </span>
+          <span className="form-row-label">{t('others.queue')}</span>
           <div className={clsx('toggle-switch', sendDelayEnabled && 'on')}>
             <div className="toggle-knob" />
           </div>
         </div>
         {!sendDelayAlwaysQueue && (
           <div className={clsx(styles['sub-note'], !sendDelayEnabled && styles.dimmed)}>
-            Ctrl+Enter and the Send button send immediately, without queueing.
+            {t('others.queueHint')}
           </div>
         )}
         <div className={clsx('form-row', styles['indented-row'])}>
           <span className={clsx('form-row-label', !sendDelayEnabled && styles.dimmed)}>
-            Queue duration
+            {t('others.queueDuration')}
           </span>
           <div className={styles['slider-container']}>
             <span
@@ -92,7 +92,7 @@ export function OthersSettings() {
           onClick={() => sendDelayEnabled && setSendDelayAlwaysQueue(!sendDelayAlwaysQueue)}
         >
           <span className={clsx('form-row-label', !sendDelayEnabled && styles.dimmed)}>
-            Always queue
+            {t('others.alwaysQueue')}
           </span>
           <div
             className={clsx(
@@ -107,12 +107,12 @@ export function OthersSettings() {
       </div>
 
       <div className="form-section">
-        <div className="form-section-title">EMOTE</div>
+        <div className="form-section-title">{t('others.emote')}</div>
         <div
           className={clsx('form-row', styles['clickable-row'])}
           onClick={() => setEmoteConfirm(!emoteConfirm)}
         >
-          <span className="form-row-label">Confirm before executing emote</span>
+          <span className="form-row-label">{t('others.confirmEmote')}</span>
           <div className={clsx('toggle-switch', emoteConfirm && 'on')}>
             <div className="toggle-knob" />
           </div>
@@ -121,7 +121,7 @@ export function OthersSettings() {
           className={clsx('form-row', styles['clickable-row'])}
           onClick={() => setEmoteSortByName(!emoteSortByName)}
         >
-          <span className="form-row-label">Sort emotes by name</span>
+          <span className="form-row-label">{t('others.sortEmotes')}</span>
           <div className={clsx('toggle-switch', emoteSortByName && 'on')}>
             <div className="toggle-knob" />
           </div>
@@ -129,14 +129,12 @@ export function OthersSettings() {
       </div>
 
       <div className="form-section">
-        <div className="form-section-title">SEND DESTINATION</div>
+        <div className="form-section-title">{t('others.sendDestination')}</div>
         <div
           className={clsx('form-row', styles['clickable-row'])}
           onClick={() => setRetainSyncSendPrefix(!retainSyncSendPrefix)}
         >
-          <span className="form-row-label">
-            Retain send destination when returning to a Sync tab
-          </span>
+          <span className="form-row-label">{t('others.retainSync')}</span>
           <div className={clsx('toggle-switch', retainSyncSendPrefix && 'on')}>
             <div className="toggle-knob" />
           </div>

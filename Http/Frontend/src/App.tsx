@@ -11,6 +11,8 @@ import { useFilterManagement } from './hooks/useFilterManagement';
 import { useAuth } from './hooks/useAuth';
 import { useSettingsStore } from './store/settingsStore';
 import { useSessionStore } from './store/sessionStore';
+import { useUiStore } from './store/uiStore';
+import { useTranslation } from './i18n';
 import { DEFAULT_CHANNELS, TELL_INCOMING, TELL_OUTGOING } from './constants/channels';
 import { formatPlayerName, isSamePlayer } from './lib/formatUtils';
 import { RELAY_ADDR } from './constants/config';
@@ -18,9 +20,11 @@ import { dispatchUnauthorized } from './lib/authEvent';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { ChatArea } from './components/ChatArea/ChatArea';
 import { SettingsModal } from './components/Settings/SettingsModal';
+import type { SettingsCategory } from './components/Settings/SettingsModal';
 import { LinkConfirmModal } from './components/Settings/LinkConfirmModal';
 import { PasscodeModal } from './components/Auth/PasscodeModal';
 import { PendingSendBackdrop } from './components/Common/PendingSendBackdrop';
+import { AiPanel } from './components/Ai/AiPanel';
 import { useFilterMode } from './hooks/useFilterMode';
 import type { ChatMessage, ChannelOption, TellPartner } from './types/chat';
 
@@ -59,6 +63,12 @@ function collectTellPartners(messages: ChatMessage[]): TellPartner[] {
 function App() {
   const { status, authenticate } = useAuth();
 
+  useEffect(() => {
+    if (status === 'authenticated') {
+      void useUiStore.getState().syncFromServer();
+    }
+  }, [status]);
+
   if (status !== 'authenticated') {
     return <PasscodeModal status={status} onAuthenticate={authenticate} />;
   }
@@ -67,6 +77,7 @@ function App() {
 }
 
 function AppContent() {
+  const { t } = useTranslation();
   // ── Core chat state ────────────────────────────────────────────
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const isConnected = useSessionStore((s) => s.isConnected);
@@ -107,6 +118,9 @@ function AppContent() {
   const setFolders = useSettingsStore((s) => s.setFolders);
 
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsInitialCategory, setSettingsInitialCategory] =
+    useState<SettingsCategory>('appearance');
+  const [showAiPanel, setShowAiPanel] = useState(false);
 
   // ── Sync tab prefix map (session only) ─────────────────────────
   const [syncTabPrefixMap, setSyncTabPrefixMap] = useState<Record<string, string>>({});
@@ -318,7 +332,7 @@ function AppContent() {
         /* Declared last so it is tried first; it only holds glyphs the Lodestone font lacks. */
         @font-face {
           font-family: 'FFXIV-Lodestone';
-          src: url('${RELAY_ADDR}/files/ChatAnywhere_Symbols.ttf') format('truetype');
+          src: url('${RELAY_ADDR}/files/Linkpearl_Symbols.ttf') format('truetype');
           unicode-range: U+E000-F8FF;
         }
       `;
@@ -472,11 +486,16 @@ function AppContent() {
     selectFilter,
   });
 
+  const openSettings = (category: SettingsCategory = 'appearance') => {
+    setSettingsInitialCategory(category);
+    setShowSettings(true);
+  };
+
   return (
     <div className={styles['app-container']}>
       {showLoginOverlay && (
         <div className={styles['login-overlay']}>
-          <span className={styles['login-overlay-text']}>Waiting for character login…</span>
+          <span className={styles['login-overlay-text']}>{t('app.waitingLogin')}</span>
           <div className={styles['login-overlay-dots']}>
             <span />
             <span />
@@ -501,7 +520,7 @@ function AppContent() {
         onSelectFilter={handleSelectFilter}
         onSelectDm={handleSelectDm}
         onClose={() => setIsSidebarOpen(false)}
-        onOpenSettings={() => setShowSettings(true)}
+        onOpenSettings={() => openSettings('appearance')}
         onAddFilter={handleAddFilter}
         onEditFilter={handleEditFilter}
         onDeleteFilter={handleDeleteFilter}
@@ -518,6 +537,7 @@ function AppContent() {
         activeFilter={activeFilter}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        onToggleAi={() => setShowAiPanel(true)}
         filteredMessages={filteredMessages}
         bannerCount={bannerCount}
         hasUnreadDown={hasUnreadDown}
@@ -557,7 +577,18 @@ function AppContent() {
           setSelectedSendPrefix={setSelectedSendPrefix}
           filterMode={filterMode}
           onDeletePersonalFilters={deletePersonalFilters}
+          initialCategory={settingsInitialCategory}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showAiPanel && (
+        <AiPanel
+          onClose={() => setShowAiPanel(false)}
+          onOpenSettings={() => {
+            setShowAiPanel(false);
+            openSettings('ai');
+          }}
         />
       )}
 

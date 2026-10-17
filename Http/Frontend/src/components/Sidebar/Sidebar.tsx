@@ -32,6 +32,7 @@ import { FilterFolderModal } from './FilterFolderModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import { FilterModeModal } from './FilterModeModal';
 import type { FilterMode } from '../../hooks/useFilterMode';
+import { useTranslation } from '../../i18n';
 
 function PersonalFilterIcon() {
   return <Lock size={10} strokeWidth={2.5} aria-hidden />;
@@ -75,6 +76,7 @@ function SortableFilterRow({
   onSelect,
   onOpenMenu,
 }: SortableFilterRowProps) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `${FILTER_PREFIX}${filterName}`,
   });
@@ -105,7 +107,7 @@ function SortableFilterRow({
         className={styles['filter-menu-btn']}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={onOpenMenu}
-        aria-label={`${filterName} options`}
+        aria-label={t('common.options', { name: filterName })}
       >
         ···
       </button>
@@ -137,6 +139,7 @@ function SortableFolderSection({
   openFilterMenu,
   setModal,
 }: SortableFolderSectionProps) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `${FOLDER_PREFIX}${folder.name}`,
   });
@@ -157,7 +160,7 @@ function SortableFolderSection({
             className={styles['add-btn']}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setModal({ type: 'createFilter', folderName: folder.name })}
-            aria-label={`Add filter to ${folder.name}`}
+            aria-label={t('sidebar.addFilterTo', { name: folder.name })}
           >
             ＋
           </button>
@@ -165,14 +168,14 @@ function SortableFolderSection({
             className={styles['folder-menu-btn']}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => openFolderMenu(e, folder.name)}
-            aria-label={`${folder.name} options`}
+            aria-label={t('common.options', { name: folder.name })}
           >
             ···
           </button>
         </div>
       </div>
 
-      {folder.filters.length === 0 && <div className={styles['channel-empty']}>No filters</div>}
+      {folder.filters.length === 0 && <div className={styles['channel-empty']}>{t('sidebar.noFilters')}</div>}
 
       <SortableContext
         items={folder.filters.map((n) => `${FILTER_PREFIX}${n}`)}
@@ -278,6 +281,7 @@ export function Sidebar({
   onEnablePersonalFilters,
   onDisablePersonalFilters,
 }: Props) {
+  const { t } = useTranslation();
   const isConnected = useSessionStore((s) => s.isConnected);
   const localPlayerName = useSessionStore((s) => s.playerName);
   const localPlayerWorld = useSessionStore((s) => s.playerWorld);
@@ -376,14 +380,14 @@ export function Sidebar({
       <aside className={clsx(styles.sidebar, isOpen && styles.open)}>
         {/* ── Header ── */}
         <div className={styles['sidebar-header']}>
-          <span className={styles['sidebar-logo']}>ChatAnywhere</span>
+          <span className={styles['sidebar-logo']}>Linkpearl</span>
           <div className={styles['header-right']}>
             <button
               className={styles['settings-icon']}
               onClick={onOpenSettings}
-              data-tooltip="Settings"
+              data-tooltip={t('common.settings')}
               data-tooltip-pos="bottom"
-              aria-label="Settings"
+              aria-label={t('common.settings')}
             >
               <Settings size={18} aria-hidden />
             </button>
@@ -392,7 +396,7 @@ export function Sidebar({
                 styles['connection-indicator'],
                 isConnected ? styles.online : styles.offline,
               )}
-              data-tooltip={isConnected ? 'Connected' : 'Disconnected'}
+              data-tooltip={isConnected ? t('common.connected') : t('common.disconnected')}
               data-tooltip-pos="bottom"
             >
               <span className={styles['antenna-bar']} />
@@ -412,9 +416,9 @@ export function Sidebar({
                 .join(' ')}
               onClick={filterMode ? () => setShowFilterModeModal(true) : undefined}
               disabled={!filterMode}
-              data-tooltip={filterMode ? 'Switch Shared / Personal' : undefined}
+              data-tooltip={filterMode ? t('common.switchSharedPersonal') : undefined}
               data-tooltip-pos="bottom"
-              aria-label="Switch Shared / Personal"
+              aria-label={t('common.switchSharedPersonal')}
             >
               <div className={styles['player-avatar-wrapper']}>
                 <div className={styles['player-avatar']}>
@@ -503,17 +507,17 @@ export function Sidebar({
             className={styles['add-folder-btn']}
             onClick={() => setModal({ type: 'createFolder' })}
           >
-            + Add Folder
+            {t('sidebar.addFolder')}
           </button>
         </nav>
 
         {/* ── DM Section ── */}
         <div className={styles['dm-section']}>
           <div className={styles['channel-section-label']}>
-            <span>Direct Messages</span>
+            <span>{t('sidebar.directMessages')}</span>
           </div>
           {tellPartners.length === 0 ? (
-            <div className={styles['channel-empty']}>No recent tells</div>
+            <div className={styles['channel-empty']}>{t('sidebar.noRecentTells')}</div>
           ) : (
             tellPartners.map((partner) => {
               const key = partner.world ? `${partner.name}@${partner.world}` : partner.name;
@@ -551,7 +555,7 @@ export function Sidebar({
                   setMenu(null);
                 }}
               >
-                Edit
+                {t('sidebar.edit')}
               </button>
               <button
                 className={clsx(styles['context-item'], styles['context-danger'])}
@@ -560,7 +564,7 @@ export function Sidebar({
                   setMenu(null);
                 }}
               >
-                Delete
+                {t('sidebar.delete')}
               </button>
             </>
           )}
@@ -573,7 +577,7 @@ export function Sidebar({
                   setMenu(null);
                 }}
               >
-                Rename
+                {t('sidebar.rename')}
               </button>
               <button
                 className={clsx(styles['context-item'], styles['context-danger'])}
@@ -582,7 +586,7 @@ export function Sidebar({
                   setMenu(null);
                 }}
               >
-                Delete Folder
+                {t('sidebar.deleteFolder')}
               </button>
             </>
           )}
@@ -618,8 +622,8 @@ export function Sidebar({
 
       {modal?.type === 'deleteFilter' && (
         <ConfirmDialog
-          title={`Delete "${modal.name}"?`}
-          body="This cannot be undone."
+          title={t('sidebar.deleteFilterTitle', { name: modal.name })}
+          body={t('sidebar.deleteFilterBody')}
           onConfirm={() => {
             onDeleteFilter(modal.name);
             setModal(null);
@@ -653,8 +657,8 @@ export function Sidebar({
 
       {modal?.type === 'deleteFolder' && (
         <ConfirmDialog
-          title={`Delete folder "${modal.name}"?`}
-          body="All filters inside will also be deleted. This cannot be undone."
+          title={t('sidebar.deleteFolderTitle', { name: modal.name })}
+          body={t('sidebar.deleteFolderBody')}
           onConfirm={() => {
             onDeleteFolder(modal.name);
             setModal(null);

@@ -1,6 +1,6 @@
 using WatsonWebserver.Core;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 internal class StaticFileHandler
 {

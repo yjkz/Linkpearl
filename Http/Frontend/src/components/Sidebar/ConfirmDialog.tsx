@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import styles from './ConfirmDialog.module.css';
+import { useTranslation } from '../../i18n';
 
 interface Props {
   title: string;
@@ -9,7 +10,8 @@ interface Props {
   onClose: () => void;
 }
 
-export function ConfirmDialog({ title, body, confirmLabel = 'Delete', onConfirm, onClose }: Props) {
+export function ConfirmDialog({ title, body, confirmLabel, onConfirm, onClose }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
@@ -17,10 +19,10 @@ export function ConfirmDialog({ title, body, confirmLabel = 'Delete', onConfirm,
         <p className={styles.body}>{body}</p>
         <div className={styles.actions}>
           <button className={clsx('btn btn-secondary', styles['btn-cancel'])} onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button className={clsx('btn', styles['btn-danger'])} onClick={onConfirm}>
-            {confirmLabel}
+            {confirmLabel ?? t('common.delete')}
           </button>
         </div>
       </div>

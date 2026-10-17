@@ -91,3 +91,45 @@
   height: 13px;
   flex-shrink: 0;
 }
+
+/* ========== AI Button ========== */
+.header-ai-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.header-ai-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.header-ai-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

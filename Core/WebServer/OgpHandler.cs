@@ -6,7 +6,7 @@ using Dalamud.Plugin.Services;
 using OpenGraphNet;
 using WatsonWebserver.Core;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 internal class OgpHandler : IDisposable
 {
@@ -112,7 +112,7 @@ internal class OgpHandler : IDisposable
     {
         var graph = await OpenGraph.ParseUrlAsync(
             url,
-            userAgent: "Mozilla/5.0 (compatible; ChatAnywhere/1.0)",
+            userAgent: "Mozilla/5.0 (compatible; Linkpearl/1.0)",
             timeout: 10000);
 
         var title       = graph.Title;

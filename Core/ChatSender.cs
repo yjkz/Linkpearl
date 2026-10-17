@@ -3,7 +3,7 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 // Based on ChatTwo: https://github.com/Infiziert90/ChatTwo
 public unsafe class ChatSender

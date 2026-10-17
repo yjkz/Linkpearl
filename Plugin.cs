@@ -2,14 +2,15 @@ using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using ChatAnywhere.Core;
-using ChatAnywhere.Ui;
+using Linkpearl.Core;
+using Linkpearl.Core.Ai;
+using Linkpearl.Ui;
 
-namespace ChatAnywhere;
+namespace Linkpearl;
 
 public sealed class Plugin : IAsyncDalamudPlugin
 {
-    public string Name => "ChatAnywhere";
+    public string Name => "Linkpearl";
 
     public IDalamudPluginInterface Interface { get; init; }
     public IPluginLog Log { get; init; }
@@ -27,11 +28,13 @@ public sealed class Plugin : IAsyncDalamudPlugin
     public ChatSender Sender { get; init; }
     public FontManager FontManager { get; }
     public WebServer Server { get; init; }
+    public AiService Ai { get; }
 
-    public WindowSystem WindowSystem { get; } = new("ChatAnywhere");
+    public WindowSystem WindowSystem { get; } = new("Linkpearl");
     public SettingsWindow SettingsWindow { get; }
+    public AiWindow AiWindow { get; }
 
-    private const string CommandName = "/chatanywhere";
+    private const string CommandName = "/linkpearl";
     private string _lastGameChannelPrefix = string.Empty;
     private DateTimeOffset _lastChannelPollTime = DateTimeOffset.MinValue;
     /// <summary>
@@ -72,14 +75,20 @@ public sealed class Plugin : IAsyncDalamudPlugin
         Sender      = new ChatSender(Log);
         Receiver    = new ChatReceiver(Chat, ClientState, ObjectTable, Log);
         FontManager = new FontManager(Interface, DataManager, Log);
+        Ai          = new AiService(this, Sender, Receiver, Log);
         Server      = new WebServer(this, Sender, Receiver, Log);
 
         SettingsWindow = new SettingsWindow(this);
+        AiWindow       = new AiWindow(this);
         WindowSystem.AddWindow(SettingsWindow);
+        WindowSystem.AddWindow(AiWindow);
     }
 
     public Task LoadAsync(CancellationToken cancellationToken)
     {
+        if (Ai.EnsureDefaults())
+            SaveConfig();
+
         if (Config.WebinterfaceEnabled)
             Server.Start();
 
@@ -88,7 +97,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = "Open ChatAnywhere settings. Use 'start' or 'stop' to control the server.",
+            HelpMessage = UiStrings.T(Config.UiLanguage, "command.help"),
         });
 
         Framework.Update   += OnFrameworkUpdate;
@@ -109,11 +118,11 @@ public sealed class Plugin : IAsyncDalamudPlugin
                 if (!Server.IsRunning)
                 {
                     Server.Start();
-                    Chat.Print("[ChatAnywhere] Server started.");
+                    Chat.Print(UiStrings.T(Config.UiLanguage, "command.serverStarted"));
                 }
                 else
                 {
-                    Chat.Print("[ChatAnywhere] Server is already running.");
+                    Chat.Print(UiStrings.T(Config.UiLanguage, "command.serverRunning"));
                 }
                 break;
 
@@ -121,19 +130,24 @@ public sealed class Plugin : IAsyncDalamudPlugin
                 if (Server.IsRunning)
                 {
                     Server.Stop();
-                    Chat.Print("[ChatAnywhere] Server stopped.");
+                    Chat.Print(UiStrings.T(Config.UiLanguage, "command.serverStopped"));
                 }
                 else
                 {
-                    Chat.Print("[ChatAnywhere] Server is not running.");
+                    Chat.Print(UiStrings.T(Config.UiLanguage, "command.serverNotRunning"));
                 }
                 break;
 
+            case "ai":
+                AiWindow.IsOpen = !AiWindow.IsOpen;
+                break;
+
             case "help":
-                Chat.Print("[ChatAnywhere] Commands:");
-                Chat.Print("  /chatanywhere       — Toggle settings window");
-                Chat.Print("  /chatanywhere start — Start the server");
-                Chat.Print("  /chatanywhere stop  — Stop the server");
+                Chat.Print(UiStrings.T(Config.UiLanguage, "command.helpHeader"));
+                Chat.Print(UiStrings.T(Config.UiLanguage, "command.helpToggle"));
+                Chat.Print(UiStrings.T(Config.UiLanguage, "command.helpStart"));
+                Chat.Print(UiStrings.T(Config.UiLanguage, "command.helpStop"));
+                Chat.Print(UiStrings.T(Config.UiLanguage, "command.helpAi"));
                 break;
 
             default:
@@ -183,6 +197,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
     {
         LocalPlayerName = string.Empty;
         LocalPlayerWorld = string.Empty;
+        Ai.HandleLogout();
         if (Server.IsRunning)
             Server.BroadcastPlayerInfo(string.Empty, string.Empty);
     }
@@ -216,6 +231,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
 
         WindowSystem.RemoveAllWindows();
 
+        Ai.Dispose();
         await Server.DisposeAsync().ConfigureAwait(false);
         Receiver.Dispose();
 

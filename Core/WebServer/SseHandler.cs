@@ -3,7 +3,7 @@ using System.Text.Json;
 using Dalamud.Plugin.Services;
 using WatsonWebserver.Core;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 internal class SseHandler
 {
@@ -16,6 +16,11 @@ internal class SseHandler
     private readonly Func<CancellationToken> _getToken;
 
     private volatile string _lastChannelsJson = string.Empty;
+
+    private static readonly JsonSerializerOptions AiJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
 
     internal SseHandler(
         Plugin plugin,
@@ -83,6 +88,33 @@ internal class SseHandler
         _sseManager.Broadcast($"data: {payload}\n\n");
     }
 
+    /// <summary>
+    /// Broadcasts the shared UI language so browsers and the in-game UI stay in sync.
+    /// </summary>
+    internal void BroadcastUiLanguage(string language)
+    {
+        var json = JsonSerializer.Serialize(new { type = "ui-language-changed", language });
+        _sseManager.Broadcast($"data: {json}\n\n");
+    }
+
+    internal void OnAiSuggestionAdded(Ai.AiSuggestionSet suggestion) =>
+        BroadcastJson(new { type = "ai-suggestion", suggestion }, AiJsonOptions);
+
+    internal void OnAiSuggestionRemoved(string id) =>
+        BroadcastJson(new { type = "ai-suggestion-removed", id });
+
+    internal void OnAiActivity(Ai.AiActivityEntry entry) =>
+        BroadcastJson(new { type = "ai-activity", entry }, AiJsonOptions);
+
+    internal void BroadcastAiSettingsChanged() =>
+        BroadcastJson(new { type = "ai-settings-changed" });
+
+    private void BroadcastJson(object payload, JsonSerializerOptions? options = null)
+    {
+        var json = JsonSerializer.Serialize(payload, options);
+        _sseManager.Broadcast($"data: {json}\n\n");
+    }
+
     internal async Task HandleSseConnection(HttpContextBase ctx)
     {
         if (!await _auth.RequireAuth(ctx)) return;
@@ -105,6 +137,11 @@ internal class SseHandler
         try
         {
             var initEvents = new List<string> { "{\"type\":\"connected\"}", _chat.GetChannelsJson() };
+            initEvents.Add(JsonSerializer.Serialize(new
+            {
+                type = "ui-language-changed",
+                language = string.Equals(_plugin.Config.UiLanguage, "en", StringComparison.OrdinalIgnoreCase) ? "en" : "zh",
+            }));
 
             var activePrefix = _chat.GetCurrentGameChannelPrefix();
             if (!string.IsNullOrEmpty(activePrefix))

@@ -5,7 +5,7 @@ using NetStone;
 using NetStone.Search.Character;
 using WatsonWebserver.Core;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 internal class AvatarHandler
 {

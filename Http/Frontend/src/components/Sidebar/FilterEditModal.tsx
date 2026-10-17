@@ -2,49 +2,10 @@ import { useState } from 'react';
 import clsx from 'clsx';
 import styles from './FilterEditModal.module.css';
 import type { CustomFilter } from '../../types/filter';
-import { FILTER_NAME_REGEX, FILTER_NAME_ERROR } from '../../types/filter';
+import { FILTER_NAME_REGEX } from '../../types/filter';
 import { TRACKED_CHANNEL_TYPES, ALL_CHANNELS, CHANNEL_GROUPS } from '../../constants/channels';
-
-// Channel type labels for the modal checkboxes (used for individual/ungrouped types)
-const CHANNEL_LABELS: Record<number, string> = {
-  1: 'Debug',
-  2: 'Error',
-  10: 'Say',
-  11: 'Shout',
-  12: 'Tell (Out)',
-  13: 'Tell (In)',
-  14: 'Party',
-  15: 'Alliance',
-  16: 'LS1',
-  17: 'LS2',
-  18: 'LS3',
-  19: 'LS4',
-  20: 'LS5',
-  21: 'LS6',
-  22: 'LS7',
-  23: 'LS8',
-  24: 'FC',
-  27: 'Novice',
-  28: 'Emote',
-  29: 'Emote (Std)',
-  30: 'Yell',
-  32: 'X-Party',
-  36: 'PvP Team',
-  37: 'CWLS1',
-  101: 'CWLS2',
-  102: 'CWLS3',
-  103: 'CWLS4',
-  104: 'CWLS5',
-  105: 'CWLS6',
-  106: 'CWLS7',
-  107: 'CWLS8',
-  56: 'Echo',
-  69: 'FC Ann.',
-  70: 'FC Login',
-  75: 'Novice Sys',
-  77: 'PvP Ann.',
-  78: 'PvP Login',
-};
+import { useTranslation } from '../../i18n';
+import { useChannelLabel, useChannelLabelByPrefix } from '../../i18n/channelLabels';
 
 // Types absorbed into groups — rendered as a single grouped checkbox
 const GROUPED_TYPE_IDS = new Set(CHANNEL_GROUPS.flatMap((g) => g.types));
@@ -86,6 +47,9 @@ export function FilterEditModal({
   onSave,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
+  const channelLabel = useChannelLabel();
+  const channelLabelByPrefix = useChannelLabelByPrefix();
   const isEdit = initial !== null;
 
   const [name, setName] = useState(initial?.name ?? '');
@@ -99,9 +63,9 @@ export function FilterEditModal({
   const [nameError, setNameError] = useState('');
 
   const validateName = (value: string): string => {
-    if (!FILTER_NAME_REGEX.test(value)) return FILTER_NAME_ERROR;
-    if (existingFilterNames.includes(value)) return 'A filter with this name already exists.';
-    if (existingFolderNames.includes(value)) return 'A folder with this name already exists.';
+    if (!FILTER_NAME_REGEX.test(value)) return t('filter.nameError');
+    if (existingFilterNames.includes(value)) return t('filter.nameExists');
+    if (existingFolderNames.includes(value)) return t('filter.folderNameExists');
     return '';
   };
 
@@ -140,11 +104,11 @@ export function FilterEditModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.title}>{isEdit ? 'Edit Filter' : 'New Filter'}</h2>
+        <h2 className={styles.title}>{isEdit ? t('filter.editTitle') : t('filter.newTitle')}</h2>
 
         {/* ── Filter Name ── */}
         <div className="form-field">
-          <label className="form-field-label">Filter Name</label>
+          <label className="form-field-label">{t('filter.name')}</label>
           <input
             className={clsx('form-input', nameError && 'form-input-error')}
             type="text"
@@ -158,19 +122,17 @@ export function FilterEditModal({
             }}
             autoFocus
             maxLength={32}
-            placeholder="e.g. RaidChat"
+            placeholder={t('filter.namePlaceholder')}
           />
           {nameError && <span className="form-error">{nameError}</span>}
-          {!nameError && (
-            <span className="form-hint">Letters, numbers, hyphens, underscores (max 32)</span>
-          )}
+          {!nameError && <span className="form-hint">{t('filter.nameHint')}</span>}
         </div>
 
         {/* ── Notification ── */}
         <div className={clsx('form-section', styles['modal-section'])}>
-          <div className="form-section-title">Notification</div>
+          <div className="form-section-title">{t('filter.notification')}</div>
           <div className="form-row">
-            <span className="form-row-label">Badge (Unread)</span>
+            <span className="form-row-label">{t('filter.badgeUnread')}</span>
             <button
               className={clsx('toggle-switch', notifyUnread && 'on')}
               role="switch"
@@ -184,39 +146,36 @@ export function FilterEditModal({
 
         {/* ── Default Send Channel ── */}
         <div className={clsx('form-section', styles['modal-section'])}>
-          <div className="form-section-title">Default Send Channel</div>
+          <div className="form-section-title">{t('filter.defaultSendChannel')}</div>
           <select
             className="form-select"
             value={defaultSendPrefix}
             onChange={(e) => setDefaultSendPrefix(e.target.value)}
           >
-            <option value="">Sync with game</option>
+            <option value="">{t('filter.syncWithGame')}</option>
             {ALL_CHANNELS.map((ch) => (
               <option key={ch.prefix} value={ch.prefix}>
-                {ch.label}
+                {channelLabelByPrefix(ch.prefix)}
               </option>
             ))}
           </select>
-          <span className="form-hint">
-            If the selected channel is unavailable (disabled or not joined in-game), the filter will
-            sync with the in-game channel instead.
-          </span>
+          <span className="form-hint">{t('filter.syncHint')}</span>
         </div>
 
         {/* ── Show Channel Types ── */}
         <div className={clsx('form-section', styles['modal-section'])}>
           <div className={styles['section-header']}>
-            <div className="form-section-title">Show Channel Types</div>
+            <div className="form-section-title">{t('filter.showChannelTypes')}</div>
             <div className={styles['select-all-btns']}>
               <button
                 className={styles['text-btn']}
                 onClick={() => setShowChannelTypes([...TRACKED_CHANNEL_TYPES])}
               >
-                Select All
+                {t('filter.selectAll')}
               </button>
               <span className={styles.divider}>|</span>
               <button className={styles['text-btn']} onClick={() => setShowChannelTypes([])}>
-                Deselect All
+                {t('filter.deselectAll')}
               </button>
             </div>
           </div>
@@ -230,7 +189,7 @@ export function FilterEditModal({
                       checked={showChannelTypes.includes(item.typeId)}
                       onChange={() => toggleType(item.typeId)}
                     />
-                    <span>{CHANNEL_LABELS[item.typeId] ?? String(item.typeId)}</span>
+                    <span>{channelLabel(item.typeId)}</span>
                   </label>
                 );
               }
@@ -246,7 +205,7 @@ export function FilterEditModal({
                     }}
                     onChange={() => toggleGroup(item.types)}
                   />
-                  <span>{item.label}</span>
+                  <span>{item.label === 'Tell' ? t('channel.tell') : channelLabel(item.types[0])}</span>
                 </label>
               );
             })}
@@ -256,10 +215,10 @@ export function FilterEditModal({
         {/* ── Actions ── */}
         <div className="form-actions">
           <button className="btn btn-secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button className="btn btn-primary" onClick={handleSave}>
-            {isEdit ? 'Save' : 'Create'}
+            {isEdit ? t('common.save') : t('common.create')}
           </button>
         </div>
       </div>

@@ -3,7 +3,7 @@ using System.Text;
 using Dalamud.Plugin.Services;
 using Lumina.Data.Files;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 internal static class SymbolFontBuilder
 {

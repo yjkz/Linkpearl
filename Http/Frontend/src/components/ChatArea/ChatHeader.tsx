@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-import { Pencil } from 'lucide-react';
+import { Pencil, Sparkles } from 'lucide-react';
 import styles from './ChatHeader.module.css';
 import type { CustomFilter } from '../../types/filter';
 import type { TellPartner } from '../../types/chat';
 import { FilterEditModal } from '../Sidebar/FilterEditModal';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useAiStore } from '../../store/aiStore';
+import { useTranslation } from '../../i18n';
 
 interface Props {
   activeDmTarget: TellPartner | null;
@@ -13,6 +15,7 @@ interface Props {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
   onEditFilter: (filter: CustomFilter, oldName: string) => void;
+  onToggleAi: () => void;
 }
 
 export function ChatHeader({
@@ -21,8 +24,11 @@ export function ChatHeader({
   isSidebarOpen,
   onToggleSidebar,
   onEditFilter,
+  onToggleAi,
 }: Props) {
+  const { t } = useTranslation();
   const filters = useSettingsStore((s) => s.filters);
+  const aiPending = useAiStore((s) => s.suggestions.length);
   const folders = useSettingsStore((s) => s.folders);
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -32,7 +38,7 @@ export function ChatHeader({
         <button
           className={styles['hamburger-btn']}
           onClick={onToggleSidebar}
-          aria-label="Toggle menu"
+          aria-label={t('chat.toggleMenu')}
           aria-expanded={isSidebarOpen}
         >
           <span className={clsx('hamburger-icon', isSidebarOpen && 'open')}>
@@ -47,10 +53,21 @@ export function ChatHeader({
             {activeDmTarget ? activeDmTarget.name : (activeFilter?.name ?? 'chat')}
           </span>
         </div>
+        <button
+          className={styles['header-ai-btn']}
+          onClick={onToggleAi}
+          aria-label={t('ai.open')}
+          data-tooltip={t('ai.open')}
+        >
+          <Sparkles size={15} strokeWidth={1.8} aria-hidden />
+          {aiPending > 0 && (
+            <span className={styles['header-ai-badge']}>{aiPending > 99 ? '99+' : aiPending}</span>
+          )}
+        </button>
         {activeFilter && !activeDmTarget && (
           <button className={styles['header-edit-btn']} onClick={() => setShowEditModal(true)}>
             <Pencil className={styles['header-edit-icon']} size={14} aria-hidden />
-            Edit
+            {t('chat.edit')}
           </button>
         )}
       </header>

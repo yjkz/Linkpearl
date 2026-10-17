@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Dalamud.Game.Text;
 
-namespace ChatAnywhere.Core;
+namespace Linkpearl.Core;
 
 /// <summary>
 /// In-memory chat history store.
@@ -142,6 +142,34 @@ public sealed class ChatHistory
 
         var skip = Math.Max(0, all.Count - limit);
         return all.Skip(skip);
+    }
+
+    /// <summary>
+    /// Returns the newest <paramref name="limit"/> messages from the specified channel types,
+    /// sorted chronologically (oldest first).
+    /// </summary>
+    public IReadOnlyList<ReceivedChatMessage> GetRecentByTypes(
+        IReadOnlyCollection<XivChatType> types,
+        int limit)
+    {
+        var all = new List<ReceivedChatMessage>();
+        foreach (var type in types)
+        {
+            if (!_store.TryGetValue(type, out var list))
+                continue;
+
+            lock (list)
+            {
+                foreach (var message in list)
+                    all.Add(message);
+            }
+        }
+
+        all.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+
+        var take = Math.Max(1, limit);
+        var skip = Math.Max(0, all.Count - take);
+        return all.GetRange(skip, all.Count - skip);
     }
 
     /// <summary>Clears all stored messages across every channel type.</summary>

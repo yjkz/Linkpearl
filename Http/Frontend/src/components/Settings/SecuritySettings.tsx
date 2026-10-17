@@ -3,8 +3,10 @@ import { X } from 'lucide-react';
 import styles from './SecuritySettings.module.css';
 import { BUILT_IN_TRUSTED_DOMAINS } from '../../constants/trustedDomains';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useTranslation } from '../../i18n';
 
 export function SecuritySettings() {
+  const { t } = useTranslation();
   const trustedDomains = useSettingsStore((s) => s.trustedDomains);
   const setTrustedDomains = useSettingsStore((s) => s.setTrustedDomains);
   const handleRemoveDomain = (domain: string) => {
@@ -17,21 +19,18 @@ export function SecuritySettings() {
 
   return (
     <div className="form-section">
-      <div className="form-section-title">TRUSTED LINK DOMAINS</div>
-      <p>
-        Manage domains that are allowed to open without a confirmation prompt. New domains can be
-        added through the link opening dialog.
-      </p>
+      <div className="form-section-title">{t('security.trustedDomains')}</div>
+      <p>{t('security.trustedDescription')}</p>
 
       <div className={styles['domain-list']}>
         {Array.from(BUILT_IN_TRUSTED_DOMAINS).map((domain) => (
           <div key={domain} className={clsx(styles['domain-item'], styles['domain-item-builtin'])}>
             <span className={styles['domain-name']}>{domain}</span>
-            <span className={styles['builtin-badge']}>built-in</span>
+            <span className={styles['builtin-badge']}>{t('security.builtIn')}</span>
           </div>
         ))}
         {trustedDomains.size === 0 && (
-          <div className={styles['empty-state']}>No custom domains yet.</div>
+          <div className={styles['empty-state']}>{t('security.noCustom')}</div>
         )}
         {Array.from(trustedDomains).map((domain) => (
           <div key={domain} className={styles['domain-item']}>
@@ -39,7 +38,7 @@ export function SecuritySettings() {
             <button
               className={styles['remove-domain-btn']}
               onClick={() => handleRemoveDomain(domain)}
-              aria-label="Remove"
+              aria-label={t('common.remove')}
             >
               <X size={14} strokeWidth={2.5} aria-hidden />
             </button>
