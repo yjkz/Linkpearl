@@ -1,127 +1,129 @@
+<p align="center">简体中文 | <a href="README.en.md">English</a></p>
+
 <div align="center">
-  <img src="images/icon.png" alt="Linkpearl icon" width="96">
+  <img src="images/icon.png" alt="Linkpearl 图标" width="96">
   <h1>Linkpearl</h1>
-  <p><strong>Real-time FFXIV chat in your browser, with an AI assistant.</strong></p>
+  <p><strong>把 FFXIV 聊天带到浏览器，并内置 AI 助手。</strong></p>
   <p>
-    <a href="https://github.com/yjkz/Linkpearl/releases"><img src="https://img.shields.io/github/v/release/yjkz/Linkpearl" alt="Latest release"></a>
-    <a href="https://github.com/yjkz/Linkpearl/actions/workflows/release.yml"><img src="https://github.com/yjkz/Linkpearl/actions/workflows/release.yml/badge.svg" alt="Release workflow"></a>
+    <a href="https://github.com/yjkz/Linkpearl/releases"><img src="https://img.shields.io/github/v/release/yjkz/Linkpearl" alt="最新版本"></a>
+    <a href="https://github.com/yjkz/Linkpearl/actions/workflows/release.yml"><img src="https://github.com/yjkz/Linkpearl/actions/workflows/release.yml/badge.svg" alt="Release 工作流"></a>
   </p>
 </div>
 
-Linkpearl runs a lightweight web server inside Final Fantasy XIV. It streams your in-game chat to any browser in real time, lets you reply from anywhere, and adds an OpenAI-compatible AI assistant that can answer, offer reply options, or suggest replies in the channels you choose.
+Linkpearl 在 FFXIV 游戏内运行一个轻量 Web 服务器。它把游戏聊天实时推送到任意浏览器，让你不切回游戏也能回复；同时内置 OpenAI 兼容的 AI 助手，可以在你指定的频道自动回复、给出多个回复选项，或生成可编辑的回复建议。
 
-![Linkpearl chat view with the AI assistant panel open](images/readme-chat.png)
+![Linkpearl 聊天界面与 AI 助手面板](images/readme-chat.png)
 
-## Highlights
+## 功能亮点
 
-### Chat, everywhere
+### 随时随地聊天
 
-- Real-time streaming over Server-Sent Events — no polling
-- Supports FC, LS/CWLS 1–8, Party, Tell, Say, Shout, Yell, Alliance, Novice Network and more
-- Custom filters with folders, drag-and-drop ordering, unread badges and per-filter send channels
-- Tell mode with pinning and recent direct-message history
-- Optional send queue with a short countdown so you can cancel an accidental send
-- Emote picker with search and recently used, plus an FFXIV symbol picker
-- Rich link previews for trusted sites (Lodestone, YouTube, Twitter/X, Twitch and more)
-- Passcode authentication for browser access
+- 通过 Server-Sent Events 实时推送，无需轮询
+- 支持 FC、LS/CWLS 1–8、小队、私聊、说话、喊话、呼喊、团队、新手频道等
+- 自定义过滤器：文件夹、拖拽排序、未读角标、每个过滤器独立发送频道
+- 私聊模式：固定回复对象、最近私聊历史
+- 可选发送队列：发送前短暂倒计时，取消误发
+- 表情选择器（搜索/最近使用）与 FFXIV 特殊符号选择器
+- 受信任站点的链接预览（Lodestone、YouTube、Twitter/X、Twitch 等）
+- 浏览器访问密码保护
 
-### AI assistant
+### AI 助手
 
-- Works with any OpenAI-compatible Chat Completions provider (OpenAI, DeepSeek, Z.ai, Ollama, LM Studio, …)
-- Multiple custom agents, each with its own system prompt, model override, temperature and token limit
-- Per-channel trigger rules with cooldowns and per-minute rate limits
-- Three reply modes:
-  - **Auto reply** — send the generated reply immediately
-  - **Multiple options** — offer several clickable candidate replies
-  - **Reply suggestion** — edit one suggestion before sending
-- The assistant is a plain chat model — no tool calling, no hidden actions
-- Suggestions and activity appear in both the browser panel and the in-game `/linkpearl ai` window
+- 兼容任何 OpenAI Chat Completions 接口（OpenAI、DeepSeek、智谱、Ollama、LM Studio 等）
+- 多个可自定义 Agent，每个可设置系统提示词、模型覆盖、温度和最大 Token
+- 按频道配置触发规则，支持冷却和每分钟频率限制
+- 三种回复模式：
+  - **自动回复** — 生成后立即发送
+  - **多选项** — 给出多个候选回复，点击发送
+  - **回复建议** — 生成一条建议，可编辑后发送
+- 纯对话模型，不调用工具、不执行隐藏操作
+- 建议与活动日志同时显示在浏览器面板和游戏内 `/linkpearl ai` 窗口
 
-### One interface, two languages
+### 一个界面，两种语言
 
-- The browser and the in-game windows share the same language setting
-- **Chinese is the default**, English can be selected at any time
-- The choice is stored in the plugin configuration and synced live between both UIs
+- 浏览器与游戏内窗口共享同一个语言设置
+- **默认中文**，可随时切换 English
+- 选择保存在插件配置中，两端实时同步
 
-## Screenshots
+## 截图
 
-| Filters & channel selection | Appearance & language |
+| 过滤器与频道选择 | 外观与语言 |
 |---|---|
-| ![Filter editor](images/readme-filter.png) | ![Appearance settings](images/readme-appearance.png) |
+| ![过滤器编辑器](images/readme-filter.png) | ![外观设置](images/readme-appearance.png) |
 
 <p align="center">
-  <img src="images/readme-mobile.png" alt="Linkpearl on a phone" width="260">
+  <img src="images/readme-mobile.png" alt="手机端 Linkpearl" width="260">
 </p>
 
-## Installation
+## 安装
 
-### Custom Dalamud repository
+### 自定义 Dalamud 仓库
 
-Linkpearl is distributed through its own plugin repository:
+Linkpearl 通过自己的插件仓库分发：
 
 ```
 https://raw.githubusercontent.com/yjkz/Linkpearl/main/pluginmaster.json
 ```
 
-1. In game, run `/xlsettings` to open Dalamud settings.
-2. Open the **Experimental** tab.
-3. Add the URL above to **Custom Plugin Repositories** (one URL per line), then save.
-4. Open the **Dalamud Plugin Installer**, search for **Linkpearl**, and install it.
+1. 游戏内执行 `/xlsettings` 打开 Dalamud 设置。
+2. 打开 **Experimental** 标签。
+3. 把上面的 URL 加到 **Custom Plugin Repositories**（每行一个），保存。
+4. 打开 **Dalamud Plugin Installer**，搜索 **Linkpearl** 并安装。
 
-The installer entry includes the full description, icon and screenshots.
+安装器条目包含完整说明、图标和截图。
 
-### Local development
+### 本地开发
 
-For local development, skip the repository and add the build output folder (for example `bin\Debug`) to **Dev Plugin Locations** in Dalamud's Experimental settings. The folder must contain `Linkpearl.dll`, `Linkpearl.json` and the `dist\` frontend folder.
+本地开发不需要仓库：把构建输出目录（例如 `bin\Debug`）加入 Dalamud Experimental 设置中的 **Dev Plugin Locations**。该目录需要包含 `Linkpearl.dll`、`Linkpearl.json` 和 `dist\` 前端目录。
 
-## Setup
+## 初始设置
 
-1. Open the plugin settings with `/linkpearl`.
-2. Under **Security**, set a 4–8 digit numeric passcode.
-3. Start the web server if it is not already running, then open the shown URL in your browser:
+1. 使用 `/linkpearl` 打开插件设置。
+2. 在 **安全** 中设置 4–8 位数字密码。
+3. 如果 Web 服务器未启动，先启动它，然后在浏览器打开显示的地址：
 
    ```
    http://localhost:3000
    ```
 
-4. Enter the passcode. Chat messages stream into the page immediately, and replies are sent back to the game.
+4. 输入密码。聊天会立即出现在页面中，回复也会发送回游戏。
 
-To use another device on the same network, open `http://<your-local-ip>:3000` instead. The plugin settings window lists the available IPv4 addresses.
+同一局域网内的其他设备可以访问 `http://<本机局域网 IP>:3000`。插件设置窗口会列出可用的 IPv4 地址。
 
-## AI configuration
+## AI 配置
 
-1. Open `/linkpearl ai` or the AI panel in the browser.
-2. Open **Settings → AI Assistant**.
-3. Set the **API Base URL**, **API Key** and default model.
-4. Create one or more **Agents** and give each one a system prompt.
-5. Create a **Trigger Rule**, bind it to an agent, pick the channels and choose a reply mode.
-6. Save. The **Test Connection** button saves the current settings and verifies the provider.
+1. 打开 `/linkpearl ai` 或浏览器中的 AI 面板。
+2. 打开 **设置 → AI 助手**。
+3. 填写 **API Base URL**、**API Key** 和默认模型。
+4. 创建一个或多个 **Agent**，为它们设置系统提示词。
+5. 创建 **触发规则**，绑定 Agent、选择频道和回复模式。
+6. 保存。**测试连接** 按钮会先保存当前设置，再验证服务商。
 
-Auto replies are rate-limited per rule (cooldown + maximum per minute), and messages sent by your own character are ignored to prevent loops. The API key is stored locally in the plugin configuration and is never sent to the browser.
+自动回复按规则限流（冷却时间 + 每分钟上限），并且会忽略你自己发送的消息，避免循环回复。API Key 只保存在本地插件配置中，不会发送到浏览器。
 
-## Commands
+## 命令
 
-| Command | Action |
+| 命令 | 作用 |
 |---|---|
-| `/linkpearl` | Toggle the settings window |
-| `/linkpearl ai` | Toggle the AI assistant window |
-| `/linkpearl start` | Start the web server |
-| `/linkpearl stop` | Stop the web server |
-| `/linkpearl help` | Show command help |
+| `/linkpearl` | 开关设置窗口 |
+| `/linkpearl ai` | 开关 AI 助手窗口 |
+| `/linkpearl start` | 启动 Web 服务器 |
+| `/linkpearl stop` | 停止 Web 服务器 |
+| `/linkpearl help` | 显示命令帮助 |
 
-## Building from source
+## 从源码构建
 
-Requirements:
+依赖：
 
-- .NET 10 SDK (the project uses `Dalamud.NET.Sdk/15.0.0`)
-- Node.js 20+ and npm
-- Dalamud reference assemblies (`DALAMUD_HOME` or a local XIVLauncher installation)
+- .NET 10 SDK（项目使用 `Dalamud.NET.Sdk/15.0.0`）
+- Node.js 20+ 与 npm
+- Dalamud 参考程序集（`DALAMUD_HOME` 或本地 XIVLauncher 安装）
 
 ```bash
-# Plugin (also builds the frontend and copies dist/ into the output)
+# 插件（同时构建前端并把 dist/ 拷入输出目录）
 dotnet build Linkpearl.sln
 
-# Frontend only
+# 仅前端
 cd Http/Frontend
 npm install
 npm run build
@@ -129,31 +131,31 @@ npm test
 npm run lint
 ```
 
-The build produces a loadable plugin in `bin\Debug` (or `bin\Release`), including `Linkpearl.json` and `dist\`.
+构建产物位于 `bin\Debug`（或 `bin\Release`），包含 `Linkpearl.dll`、`Linkpearl.json` 和 `dist\`，可直接加载。
 
-## Releasing
+## 发布
 
-1. Bump `<Version>` in `Linkpearl.csproj` and commit to `main`.
-2. Push a tag matching the version, e.g. `v1.6.0.2`.
-3. The `Release` workflow lints/tests/builds the frontend, builds the plugin, publishes `Linkpearl.zip` as a GitHub Release asset and updates `pluginmaster.json`.
+1. 提升 `Linkpearl.csproj` 中的 `<Version>` 并提交到 `main`。
+2. 推送同名 tag，例如 `vX.Y.Z`。
+3. `Release` 工作流会执行前端 lint/test/build、构建插件、发布 `Linkpearl.zip` 到 GitHub Release，并更新 `pluginmaster.json`。
 
-## Acknowledgements
+## 致谢
 
-Linkpearl is an independent derivative of the original [ChatAnywhere](https://github.com/twelvehouse/ChatAnywhere) project by twelvehouse. The chat relay, browser UI and plugin foundation started there, and we are grateful for that work.
+Linkpearl 是原 [ChatAnywhere](https://github.com/twelvehouse/ChatAnywhere) 项目的独立衍生版本，原作者为 twelvehouse。聊天中继、浏览器界面和插件基础都源自该项目，在此表示感谢。
 
-Linkpearl would not exist without these projects:
+Linkpearl 也离不开这些项目：
 
-| Project | Role |
+| 项目 | 作用 |
 |---|---|
-| [ChatAnywhere](https://github.com/twelvehouse/ChatAnywhere) | Original project Linkpearl is based on |
-| [ChatTwo](https://github.com/Infiziert90/ChatTwo) | Original inspiration for chat handling and UI approach |
-| [Dalamud](https://github.com/goatcorp/Dalamud) | Plugin framework and FFXIV game API |
-| [NetStone](https://github.com/xivapi/NetStone) | Lodestone character avatar lookups |
-| [OpenGraph-Net](https://github.com/ghorsey/OpenGraph-Net) | URL Open Graph preview metadata |
-| [Watson.Lite](https://github.com/jchristn/WatsonWebserver) | Embedded HTTP server and SSE support |
-| [React](https://react.dev/) + [React Compiler](https://react.dev/learn/react-compiler) | Frontend framework with automatic memoization |
-| [Vite](https://vitejs.dev/) | Build tool and dev server |
-| [TanStack Query](https://tanstack.com/query) | Server-state caching and request deduplication |
-| [Zustand](https://github.com/pmndrs/zustand) | Client-state management |
-| [@dnd-kit](https://dndkit.com/) | Drag-and-drop filter and folder reordering |
-| [react-error-boundary](https://github.com/bvaughn/react-error-boundary) | Error boundary for the message list |
+| [ChatAnywhere](https://github.com/twelvehouse/ChatAnywhere) | Linkpearl 基于的原项目 |
+| [ChatTwo](https://github.com/Infiziert90/ChatTwo) | 聊天处理与 UI 思路的早期灵感 |
+| [Dalamud](https://github.com/goatcorp/Dalamud) | 插件框架与 FFXIV 游戏 API |
+| [NetStone](https://github.com/xivapi/NetStone) | Lodestone 角色头像查询 |
+| [OpenGraph-Net](https://github.com/ghorsey/OpenGraph-Net) | 链接 Open Graph 预览元数据 |
+| [Watson.Lite](https://github.com/jchristn/WatsonWebserver) | 内嵌 HTTP 服务器与 SSE 支持 |
+| [React](https://react.dev/) + [React Compiler](https://react.dev/learn/react-compiler) | 前端框架与自动 memo 化 |
+| [Vite](https://vitejs.dev/) | 构建工具与开发服务器 |
+| [TanStack Query](https://tanstack.com/query) | 服务端状态缓存与请求去重 |
+| [Zustand](https://github.com/pmndrs/zustand) | 客户端状态管理 |
+| [@dnd-kit](https://dndkit.com/) | 过滤器与文件夹拖拽排序 |
+| [react-error-boundary](https://github.com/bvaughn/react-error-boundary) | 消息列表错误边界 |
