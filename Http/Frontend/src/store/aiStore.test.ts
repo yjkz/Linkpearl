@@ -22,7 +22,16 @@ function makeSuggestion(id: string): AiSuggestion {
 
 describe('aiStore', () => {
   beforeEach(() => {
-    act(() => useAiStore.setState({ suggestions: [], activity: [], error: null }));
+    act(() =>
+      useAiStore.setState({
+        suggestions: [],
+        activity: [],
+        error: null,
+        chatTurns: [],
+        chatSending: false,
+        chatContextCount: null,
+      }),
+    );
   });
 
   it('inserts suggestions newest first and replaces duplicates', () => {
@@ -49,5 +58,21 @@ describe('aiStore', () => {
     const activity = useAiStore.getState().activity;
     expect(activity).toHaveLength(50);
     expect(activity[0].message).toBe('m59');
+  });
+
+  it('records the context count reported by the chat endpoint', async () => {
+    await act(async () => {
+      await useAiStore.getState().sendChat('how many mentors?', ['all']);
+    });
+
+    const state = useAiStore.getState();
+    expect(state.chatContextCount).toBe(3);
+    expect(state.chatTurns[state.chatTurns.length - 1]?.role).toBe('assistant');
+  });
+
+  it('clears the context report with the conversation', () => {
+    act(() => useAiStore.setState({ chatContextCount: 3 }));
+    act(() => useAiStore.getState().clearChat());
+    expect(useAiStore.getState().chatContextCount).toBeNull();
   });
 });

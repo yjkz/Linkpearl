@@ -76,6 +76,13 @@
   line-height: 1.45;
 }
 
+.contextWarning {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--offline);
+  line-height: 1.45;
+}
+
 .bubble {
   display: flex;
   flex-direction: column;

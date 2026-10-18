@@ -11,8 +11,10 @@ export function AiChat() {
   const chatTurns = useAiStore((s) => s.chatTurns);
   const chatSending = useAiStore((s) => s.chatSending);
   const chatError = useAiStore((s) => s.chatError);
+  const chatContextCount = useAiStore((s) => s.chatContextCount);
   const sendChat = useAiStore((s) => s.sendChat);
   const clearChat = useAiStore((s) => s.clearChat);
+  const clearChatContextCount = useAiStore((s) => s.clearChatContextCount);
 
   const agents = settings?.agents ?? [];
   const [agentId, setAgentId] = useState('');
@@ -28,6 +30,7 @@ export function AiChat() {
   }, [chatTurns.length, chatSending]);
 
   const toggleScope = (key: string) => {
+    clearChatContextCount();
     setScopes((previous) => {
       const next = new Set(previous);
       if (next.has(key)) next.delete(key);
@@ -110,6 +113,14 @@ export function AiChat() {
 
         <p className={styles.hint}>{t('ai.chat.contextHint')}</p>
       </details>
+
+      {scopes.size > 0 && chatContextCount !== null && (
+        <p className={chatContextCount > 0 ? styles.hint : styles.contextWarning}>
+          {chatContextCount > 0
+            ? t('ai.chat.contextAttached', { count: chatContextCount })
+            : t('ai.chat.noContext')}
+        </p>
+      )}
 
       <div className={styles.messages}>
         {chatTurns.length === 0 && !chatSending && (

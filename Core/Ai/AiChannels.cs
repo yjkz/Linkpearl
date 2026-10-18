@@ -41,7 +41,8 @@ public static class AiChannels
 
     /// <summary>
     /// Message categories available as manual-chat context. "all" means every
-    /// message captured by the AI context buffer, including battle/system logs.
+    /// normal chat channel tracked by <see cref="ChatHistory"/> (the same feed the
+    /// web UI shows); the other categories read from the all-message buffer.
     /// </summary>
     public static readonly (string Key, string LabelKey, ushort[] Types)[] ChatContextCategories =
     [

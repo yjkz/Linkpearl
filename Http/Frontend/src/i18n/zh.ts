@@ -309,6 +309,8 @@ export const zh: Record<TranslationKey, string> = {
   'ai.chat.categories': '消息类别',
   'ai.chat.channels': '频道',
   'ai.chat.contextHint': '所选来源的最近消息会加入请求上下文。',
+  'ai.chat.contextAttached': '已附加 {count} 条聊天记录。',
+  'ai.chat.noContext': '所选来源暂无可用消息，请等待新消息或调整来源。',
   'ai.chat.empty': '选择上下文来源，然后向助手提问。',
   'ai.chat.thinking': '思考中…',
   'ai.chat.send': '发送',

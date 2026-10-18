@@ -40,6 +40,7 @@ public sealed class AiWindow : Window
     private int _chatAgentIndex;
     private volatile bool _chatSending;
     private volatile string? _chatError;
+    private volatile int _lastChatContextCount = -1;
     private static readonly Vector4 ColorYellow = new(1f, 0.85f, 0.2f, 1f);
 
     private static readonly Vector4 ColorGreen = new(0.4f, 0.9f, 0.4f, 1f);
@@ -217,6 +218,7 @@ public sealed class AiWindow : Window
                 var label = UiStrings.T(config.UiLanguage, labelKey);
                 if (ImGui.Checkbox($"{label}##ctx-cat-{key}", ref selected))
                 {
+                    _lastChatContextCount = -1;
                     if (selected)
                         _chatScopes.Add(key);
                     else
@@ -233,6 +235,7 @@ public sealed class AiWindow : Window
                 var label = UiStrings.T(config.UiLanguage, labelKey);
                 if (ImGui.Checkbox($"{label}##ctx-ch-{key}", ref selected))
                 {
+                    _lastChatContextCount = -1;
                     if (selected)
                         _chatScopes.Add(key);
                     else
@@ -243,6 +246,11 @@ public sealed class AiWindow : Window
             ImGui.TextColored(ColorMuted, T("ai.chat.contextHint"));
             ImGui.Spacing();
         }
+
+        if (_chatScopes.Count > 0 && _lastChatContextCount == 0)
+            ImGui.TextColored(ColorYellow, T("ai.chat.noContext"));
+        else if (_chatScopes.Count > 0 && _lastChatContextCount > 0)
+            ImGui.TextColored(ColorMuted, $"{T("ai.chat.contextAttached")} {_lastChatContextCount}");
 
         var available = ImGui.GetContentRegionAvail();
         var historyHeight = Math.Max(140, available.Y - 96);
@@ -314,17 +322,19 @@ public sealed class AiWindow : Window
         _chatInput = "";
         _chatError = null;
         _chatSending = true;
+        _lastChatContextCount = -1;
 
         _ = Task.Run(async () =>
         {
             try
             {
-                var reply = await _plugin.Ai
+                var result = await _plugin.Ai
                     .ChatAsync(agent.Id, message, scopes, history, CancellationToken.None)
                     .ConfigureAwait(false);
 
                 lock (_chatGate)
-                    _chatTurns.Add(new AiChatTurn { Role = "assistant", Content = reply });
+                    _chatTurns.Add(new AiChatTurn { Role = "assistant", Content = result.Reply });
+                _lastChatContextCount = result.ContextMessageCount;
             }
             catch (Exception ex)
             {

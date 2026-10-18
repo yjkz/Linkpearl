@@ -88,3 +88,9 @@ export interface AiChatRequest {
   contextScopes: string[];
   conversation: AiChatTurn[];
 }
+
+export interface AiChatResponse {
+  reply?: string;
+  /** Number of game chat messages that were attached to the request. */
+  contextCount?: number;
+}

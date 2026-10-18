@@ -303,15 +303,17 @@ public sealed class AiService : IDisposable
         }
     }
 
-    private List<ReceivedChatMessage> GetContextMessages(HashSet<ushort>? types, int limit)
+    private List<ReceivedChatMessage> GetContextMessages(IReadOnlySet<ushort> types, int limit)
     {
+        if (types.Count == 0)
+            return [];
+
         lock (_contextGate)
         {
-            IEnumerable<ReceivedChatMessage> source = _contextBuffer;
-            if (types is { Count: > 0 })
-                source = source.Where(m => types.Contains(m.Type));
-
-            return source.TakeLast(Math.Clamp(limit, 1, 100)).ToList();
+            return _contextBuffer
+                .Where(m => types.Contains(m.Type))
+                .TakeLast(Math.Clamp(limit, 1, 100))
+                .ToList();
         }
     }
 
@@ -661,7 +663,7 @@ public sealed class AiService : IDisposable
     /// Answers a free-form message from the player, optionally with recent
     /// messages from the selected game channels as context.
     /// </summary>
-    public async Task<string> ChatAsync(
+    public async Task<AiChatResult> ChatAsync(
         string? agentId,
         string userMessage,
         IReadOnlyList<string> contextScopes,
@@ -679,9 +681,14 @@ public sealed class AiService : IDisposable
                     ?? throw new InvalidOperationException("No AI agent is configured.");
 
         var model = string.IsNullOrWhiteSpace(agent.Model) ? config.AiDefaultModel : agent.Model;
+        var (contextText, contextCount) = BuildChannelContext(contextScopes);
+        _log.Debug(
+            $"[AI] Manual chat context: {contextCount} message(s) from " +
+            $"[{string.Join(", ", contextScopes)}].");
+
         var messages = new List<AiChatMessage>
         {
-            new() { Role = "system", Content = BuildChatSystemPrompt(agent, contextScopes) },
+            new() { Role = "system", Content = BuildChatSystemPrompt(agent) },
         };
 
         foreach (var turn in conversation.TakeLast(20))
@@ -701,7 +708,13 @@ public sealed class AiService : IDisposable
             });
         }
 
-        messages.Add(new AiChatMessage { Role = "user", Content = userMessage.Trim() });
+        // The transcript lives in the user turn rather than the system prompt:
+        // some OpenAI-compatible providers truncate or ignore system messages.
+        messages.Add(new AiChatMessage
+        {
+            Role = "user",
+            Content = ComposeChatUserMessage(userMessage.Trim(), contextText),
+        });
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(config.AiRequestTimeoutSeconds, 5, 120)));
@@ -721,7 +734,7 @@ public sealed class AiService : IDisposable
             var trimmed = reply.Trim();
             if (trimmed.Length == 0)
                 throw new InvalidOperationException("The model returned an empty reply.");
-            return trimmed;
+            return new AiChatResult { Reply = trimmed, ContextMessageCount = contextCount };
         }
         finally
         {
@@ -729,7 +742,7 @@ public sealed class AiService : IDisposable
         }
     }
 
-    private string BuildChatSystemPrompt(AiAgentConfig agent, IReadOnlyList<string> contextScopes)
+    private string BuildChatSystemPrompt(AiAgentConfig agent)
     {
         var isEnglish = string.Equals(_plugin.Config.UiLanguage, "en", StringComparison.OrdinalIgnoreCase);
         var fallback = isEnglish
@@ -745,65 +758,121 @@ public sealed class AiService : IDisposable
             $"You are talking directly to the player. Their character name is \"{playerName}\"; " +
             "messages from this name in the game context are the player's own words.");
         builder.AppendLine(
-            "The game chat context is a transcript from the selected channels/categories. Use it to answer the player's question; " +
-            "do not reply to the transcript as a participant unless the player explicitly asks you to draft a reply.");
+            "The player's message may include a transcript of recent in-game chat from the selected channels/categories. " +
+            "Use it as reference to answer the player's question; do not reply to the transcript as a participant " +
+            "unless the player explicitly asks you to draft a reply.");
         builder.AppendLine(
             "Answer in the same language as the player's latest message. " +
             "Be concise and practical. Markdown is allowed when it improves readability.");
-
-        var context = BuildChannelContext(contextScopes);
-        if (!string.IsNullOrEmpty(context))
-        {
-            builder.AppendLine();
-            builder.AppendLine("Recent in-game chat context (oldest to newest):");
-            builder.AppendLine(context);
-        }
+        builder.AppendLine(
+            "If the transcript does not contain the information needed, say so plainly instead of guessing.");
 
         return builder.ToString();
     }
 
-    private string BuildChannelContext(IReadOnlyList<string> contextScopes)
+    /// <summary>
+    /// Builds the transcript block for a manual chat turn. "all" means every chat
+    /// channel tracked in <see cref="ChatHistory"/> (the same feed the web UI shows);
+    /// the extra categories (battle/system/loot/NPC/craft) read from the
+    /// all-message buffer instead.
+    /// </summary>
+    private (string Text, int Count) BuildChannelContext(IReadOnlyList<string> contextScopes)
     {
         if (contextScopes.Count == 0)
-            return "";
+            return ("", 0);
 
-        var all = contextScopes.Any(scope => string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase));
-        HashSet<ushort>? filter = null;
+        var includeAllChat = contextScopes.Any(scope =>
+            string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase));
+        var selectedTypes = new HashSet<ushort>();
 
-        if (!all)
+        foreach (var scope in contextScopes)
         {
-            filter = new HashSet<ushort>();
-            foreach (var scope in contextScopes)
-            {
-                var types = AiChannels.GetContextScopeTypes(scope);
-                if (types == null)
-                    continue;
+            if (string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase))
+                continue;
 
-                foreach (var type in types)
-                    filter.Add(type);
-            }
+            var types = AiChannels.GetContextScopeTypes(scope);
+            if (types == null)
+                continue;
 
-            if (filter.Count == 0)
-                return "";
+            foreach (var type in types)
+                selectedTypes.Add(type);
         }
 
-        var limit = Math.Clamp(_plugin.Config.AiContextMessageCount, 1, 100);
-        var messages = GetContextMessages(filter, limit);
-        var builder = new StringBuilder();
+        if (!includeAllChat && selectedTypes.Count == 0)
+            return ("", 0);
 
+        var limit = Math.Clamp(_plugin.Config.AiContextMessageCount, 1, 100);
+        var messages = CollectContextMessages(selectedTypes, includeAllChat, limit)
+            .Where(message => !string.IsNullOrWhiteSpace(ExtractText(message)))
+            .ToList();
+
+        if (messages.Count == 0)
+            return ("", 0);
+
+        var builder = new StringBuilder();
         foreach (var message in messages)
         {
             var text = ExtractText(message);
-            if (string.IsNullOrWhiteSpace(text))
-                continue;
-
             var isOwn = IsLocalPlayer(message.SenderName);
             var label = AiChannels.GetLabel(message.Type);
             var sender = string.IsNullOrWhiteSpace(message.SenderName) ? "Unknown" : message.SenderName;
             builder.AppendLine($"[{label}] {sender}{(isOwn ? " (you)" : "")}: {text}");
         }
 
-        return builder.ToString().TrimEnd();
+        return (builder.ToString().TrimEnd(), messages.Count);
+    }
+
+    private List<ReceivedChatMessage> CollectContextMessages(
+        HashSet<ushort> selectedTypes,
+        bool includeAllChat,
+        int limit)
+    {
+        var trackedTypes = new HashSet<XivChatType>();
+        var untrackedTypes = new HashSet<ushort>();
+
+        foreach (var type in selectedTypes)
+        {
+            if (ChatHistory.TrackedTypes.Contains((XivChatType)type))
+                trackedTypes.Add((XivChatType)type);
+            else
+                untrackedTypes.Add(type);
+        }
+
+        if (includeAllChat)
+        {
+            foreach (var type in ChatHistory.TrackedTypes)
+                trackedTypes.Add(type);
+        }
+
+        var messages = new List<ReceivedChatMessage>();
+        if (trackedTypes.Count > 0)
+            messages.AddRange(_receiver.History.GetRecentByTypes(trackedTypes, limit));
+        if (untrackedTypes.Count > 0)
+            messages.AddRange(GetContextMessages(untrackedTypes, limit));
+
+        messages.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+        return messages.TakeLast(Math.Clamp(limit, 1, 100)).ToList();
+    }
+
+    private static string ComposeChatUserMessage(string userMessage, string context)
+    {
+        if (string.IsNullOrEmpty(context))
+        {
+            return "No recent in-game chat messages are available as context. " +
+                   "Answer the question below; if it depends on missing chat context, say so instead of guessing.\n\n" +
+                   userMessage;
+        }
+
+        var builder = new StringBuilder();
+        builder.AppendLine("Recent in-game chat transcript (oldest to newest), for reference only:");
+        builder.AppendLine(context);
+        builder.AppendLine();
+        builder.AppendLine(
+            "Answer the question below using the transcript when relevant. " +
+            "If the transcript does not contain the answer, say so instead of guessing.");
+        builder.AppendLine();
+        builder.Append(userMessage);
+        return builder.ToString();
     }
 
     private string GetPlayerName() =>

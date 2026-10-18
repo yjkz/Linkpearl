@@ -323,6 +323,8 @@ export const en = {
   'ai.chat.categories': 'Message categories',
   'ai.chat.channels': 'Channels',
   'ai.chat.contextHint': 'Recent messages from the selected sources are included in the request.',
+  'ai.chat.contextAttached': 'Attached {count} chat message(s) to the request.',
+  'ai.chat.noContext': 'No messages from the selected sources are available yet.',
   'ai.chat.empty': 'Select context sources, then ask the assistant anything.',
   'ai.chat.thinking': 'Thinking…',
   'ai.chat.send': 'Send',

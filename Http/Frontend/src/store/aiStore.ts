@@ -3,6 +3,7 @@ import { RELAY_ADDR } from '../constants/config';
 import type {
   AiActivity,
   AiChatEntry,
+  AiChatResponse,
   AiChatTurn,
   AiSettings,
   AiSettingsUpdate,
@@ -33,6 +34,8 @@ interface AiState {
   chatTurns: AiChatEntry[];
   chatSending: boolean;
   chatError: string | null;
+  /** Context message count reported by the most recent chat request, if any. */
+  chatContextCount: number | null;
   loading: boolean;
   saving: boolean;
   error: string | null;
@@ -45,6 +48,7 @@ interface AiState {
   dismissSuggestion: (id: string) => Promise<void>;
   sendChat: (message: string, contextScopes: string[], agentId?: string) => Promise<void>;
   clearChat: () => void;
+  clearChatContextCount: () => void;
   testConnection: () => Promise<AiTestResult>;
   upsertSuggestion: (suggestion: AiSuggestion) => void;
   removeSuggestion: (id: string) => void;
@@ -62,6 +66,7 @@ export const useAiStore = create<AiState>((set, get) => ({
   chatTurns: [],
   chatSending: false,
   chatError: null,
+  chatContextCount: null,
   loading: false,
   saving: false,
   error: null,
@@ -172,6 +177,7 @@ export const useAiStore = create<AiState>((set, get) => ({
       chatTurns: [...state.chatTurns, userEntry],
       chatSending: true,
       chatError: null,
+      chatContextCount: null,
     }));
 
     try {
@@ -187,7 +193,7 @@ export const useAiStore = create<AiState>((set, get) => ({
         }),
       });
       if (!res.ok) throw new Error(await readError(res));
-      const data = (await res.json()) as { reply?: string };
+      const data = (await res.json()) as AiChatResponse;
       const reply = data.reply?.trim();
       if (!reply) throw new Error('The model returned an empty reply.');
 
@@ -196,6 +202,7 @@ export const useAiStore = create<AiState>((set, get) => ({
           ...state.chatTurns,
           { id: `${Date.now()}-assistant`, role: 'assistant', content: reply },
         ],
+        chatContextCount: data.contextCount ?? null,
       }));
     } catch (e) {
       set({ chatError: e instanceof Error ? e.message : String(e) });
@@ -204,7 +211,9 @@ export const useAiStore = create<AiState>((set, get) => ({
     }
   },
 
-  clearChat: () => set({ chatTurns: [], chatError: null }),
+  clearChat: () => set({ chatTurns: [], chatError: null, chatContextCount: null }),
+
+  clearChatContextCount: () => set({ chatContextCount: null }),
 
   testConnection: async () => {
     try {

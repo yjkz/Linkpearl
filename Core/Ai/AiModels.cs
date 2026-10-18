@@ -55,6 +55,13 @@ public sealed class AiChatTurn
     public string Content { get; set; } = "";
 }
 
+/// <summary>A manual-chat reply plus the number of game messages attached as context.</summary>
+public sealed class AiChatResult
+{
+    public string Reply { get; init; } = "";
+    public int ContextMessageCount { get; init; }
+}
+
 /// <summary>
 /// A generated suggestion set waiting for the user to pick/send/edit.
 /// Serialized to the browser as-is; <see cref="ReplyPrefix"/> stays server-side.

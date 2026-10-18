@@ -61,6 +61,7 @@ export const handlers = [
       : '';
     return HttpResponse.json({
       reply: `Demo assistant: I received "${body.message ?? ''}"${context}. Ask me to summarize the selected chat, draft a reply, or explain a game mechanic.`,
+      contextCount: body.contextScopes?.length ? 3 : 0,
     });
   }),
   http.post('/ai/test', () =>

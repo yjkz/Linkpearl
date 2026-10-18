@@ -275,14 +275,18 @@ internal class AiHandler
                 return;
             }
 
-            var reply = await _ai.ChatAsync(
+            var result = await _ai.ChatAsync(
                 payload.AgentId,
                 payload.Message,
                 payload.ContextScopes ?? new List<string>(),
                 payload.Conversation ?? new List<Ai.AiChatTurn>(),
                 CancellationToken.None);
 
-            await SendJson(ctx, JsonSerializer.Serialize(new { reply }, JsonOptions));
+            await SendJson(ctx, JsonSerializer.Serialize(new
+            {
+                reply = result.Reply,
+                contextCount = result.ContextMessageCount,
+            }, JsonOptions));
         }
         catch (Exception ex)
         {
