@@ -163,6 +163,22 @@ public sealed class Plugin : IAsyncDalamudPlugin
 
     private void OnFrameworkUpdate(IFramework framework)
     {
+        // Capture the local player as soon as it exists. AI chat (own-message
+        // detection, restored context) needs this even when the web UI is off.
+        // Runs every frame until LocalPlayerName is set, then becomes a no-op.
+        if (string.IsNullOrEmpty(LocalPlayerName) && ObjectTable.LocalPlayer != null)
+        {
+            LocalPlayerName = ObjectTable.LocalPlayer.Name.TextValue;
+            LocalPlayerWorld = ObjectTable.LocalPlayer.HomeWorld.ValueNullable?.Name.ToString() ?? string.Empty;
+            if (Server.IsRunning)
+                Server.BroadcastPlayerInfo(LocalPlayerName, LocalPlayerWorld);
+        }
+
+        // Recover the game's stored chat log once the player is in the world.
+        // This restores context after a plugin reload/update.
+        if (!string.IsNullOrEmpty(LocalPlayerName))
+            Ai.BackfillContextLog();
+
         if (!Server.IsRunning) return;
 
         // Sync active channel prefix on every frame (cheap string compare)
@@ -180,16 +196,6 @@ public sealed class Plugin : IAsyncDalamudPlugin
         {
             _lastChannelPollTime = now;
             Server.PollAndBroadcastChannels();
-        }
-
-        // Once LocalPlayer is confirmed and name is not yet stored, capture and broadcast it.
-        // Covers both the post-login case and mid-session plugin startup.
-        // Runs every frame until LocalPlayerName is set, then becomes a no-op.
-        if (string.IsNullOrEmpty(LocalPlayerName) && ObjectTable.LocalPlayer != null)
-        {
-            LocalPlayerName = ObjectTable.LocalPlayer.Name.TextValue;
-            LocalPlayerWorld = ObjectTable.LocalPlayer.HomeWorld.ValueNullable?.Name.ToString() ?? string.Empty;
-            Server.BroadcastPlayerInfo(LocalPlayerName, LocalPlayerWorld);
         }
     }
 

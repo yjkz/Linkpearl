@@ -27,6 +27,8 @@ public sealed class AiService : IDisposable
     private readonly List<AiActivityEntry> _activity = [];
     private readonly LinkedList<ReceivedChatMessage> _contextBuffer = new();
     private readonly object _contextGate = new();
+    private int _liveMessageCount;
+    private bool _backfillDone;
     private readonly Dictionary<string, DateTimeOffset> _lastTrigger = new();
     private readonly Dictionary<string, List<DateTimeOffset>> _recentTriggers = new();
     private readonly Dictionary<string, CancellationTokenSource> _requestCts = new();
@@ -286,12 +288,19 @@ public sealed class AiService : IDisposable
         {
             _contextBuffer.Clear();
         }
+
+        Interlocked.Exchange(ref _liveMessageCount, 0);
+        _backfillDone = false;
     }
 
     // ── Triggering ──────────────────────────────────────────────────
 
     private void OnAnyMessageReceived(ReceivedChatMessage message)
     {
+        // Count every event, including text-less ones: the game stores one
+        // record per event, and the backfill boundary relies on that.
+        Interlocked.Increment(ref _liveMessageCount);
+
         if (string.IsNullOrWhiteSpace(ExtractText(message)))
             return;
 
@@ -302,6 +311,81 @@ public sealed class AiService : IDisposable
                 _contextBuffer.RemoveFirst();
         }
     }
+
+    /// <summary>
+    /// Recovers the game's own stored chat log, including messages that were
+    /// printed before this plugin instance loaded (e.g. right after an update).
+    /// Safe to call every frame; only the first successful call does any work.
+    /// </summary>
+    public void BackfillContextLog()
+    {
+        if (_backfillDone)
+            return;
+
+        var live = Volatile.Read(ref _liveMessageCount);
+        if (!GameChatLog.TryReadRecent(
+                ContextBufferSize + live,
+                _plugin.LocalPlayerName,
+                _plugin.LocalPlayerWorld,
+                _log,
+                out var stored))
+        {
+            return;
+        }
+
+        _backfillDone = true;
+
+        // The newest `live` records are the ones this instance already received
+        // through Dalamud; drop them so they are not added twice.
+        if (live > 0)
+        {
+            if (live >= stored.Count)
+                stored.Clear();
+            else
+                stored.RemoveRange(stored.Count - live, live);
+        }
+
+        if (stored.Count == 0)
+            return;
+
+        var added = 0;
+        var addedMessages = new List<ReceivedChatMessage>();
+        lock (_contextGate)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var message in _contextBuffer)
+                seen.Add(ContextKey(message));
+
+            // Prepend oldest-first while keeping the existing live messages last.
+            for (var index = stored.Count - 1; index >= 0; index--)
+            {
+                var message = stored[index];
+                if (!seen.Add(ContextKey(message)))
+                    continue;
+
+                _contextBuffer.AddFirst(message);
+                addedMessages.Add(message);
+                added++;
+            }
+
+            while (_contextBuffer.Count > ContextBufferSize)
+                _contextBuffer.RemoveFirst();
+        }
+
+        // The web UI and auto-reply history use ChatHistory; restore tracked
+        // channels there too, oldest first.
+        addedMessages.Reverse();
+        foreach (var message in addedMessages)
+        {
+            if (ChatHistory.TrackedTypes.Contains((XivChatType)message.Type))
+                _receiver.History.Add(message);
+        }
+
+        _log.Info($"[AI] Backfilled {added} message(s) from the game chat log.");
+    }
+
+    private static string ContextKey(ReceivedChatMessage message) =>
+        $"{message.Timestamp / 1000}|{message.Type}|{message.SenderName}|{ExtractText(message)}";
 
     private List<ReceivedChatMessage> GetContextMessages(IReadOnlySet<ushort> types, int limit)
     {
@@ -846,12 +930,26 @@ public sealed class AiService : IDisposable
 
         var messages = new List<ReceivedChatMessage>();
         if (trackedTypes.Count > 0)
+        {
             messages.AddRange(_receiver.History.GetRecentByTypes(trackedTypes, limit));
+
+            // History is cleared on login, while the context buffer (including
+            // messages restored after a plugin reload) is not. Merge both.
+            var trackedTypeIds = trackedTypes.Select(type => (ushort)type).ToHashSet();
+            messages.AddRange(GetContextMessages(trackedTypeIds, limit));
+        }
         if (untrackedTypes.Count > 0)
             messages.AddRange(GetContextMessages(untrackedTypes, limit));
 
-        messages.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
-        return messages.TakeLast(Math.Clamp(limit, 1, 100)).ToList();
+        var seen = new HashSet<ReceivedChatMessage>(ReferenceEqualityComparer.Instance);
+        var unique = messages.Where(message => seen.Add(message)).ToList();
+
+        // OrderBy is stable, which matters for backfilled lines that share the
+        // game log's second-granularity timestamps.
+        return unique
+            .OrderBy(message => message.Timestamp)
+            .TakeLast(Math.Clamp(limit, 1, 100))
+            .ToList();
     }
 
     private static string ComposeChatUserMessage(string userMessage, string context)

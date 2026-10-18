@@ -165,11 +165,12 @@ public sealed class ChatHistory
             }
         }
 
-        all.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
-
-        var take = Math.Max(1, limit);
-        var skip = Math.Max(0, all.Count - take);
-        return all.GetRange(skip, all.Count - skip);
+        // OrderBy is stable: messages that share a timestamp (the game log has
+        // second granularity) keep the order they were stored in.
+        return all
+            .OrderBy(message => message.Timestamp)
+            .TakeLast(Math.Max(1, limit))
+            .ToList();
     }
 
     /// <summary>Clears all stored messages across every channel type.</summary>
