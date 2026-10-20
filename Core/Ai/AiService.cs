@@ -519,7 +519,11 @@ public sealed class AiService : IDisposable
         }
 
         var model = string.IsNullOrWhiteSpace(agent.Model) ? config.AiDefaultModel : agent.Model;
-        var messages = BuildContextMessages(rule, trigger, triggerText);
+        var personaHint = GetPersonaHint(agent);
+        _log.Debug(
+            $"[AI] Reply: rule='{rule.Name}', agent='{agent.Name}', " +
+            $"systemPrompt={agent.SystemPrompt.Length} chars.");
+        var messages = BuildContextMessages(rule, trigger, triggerText, personaHint);
         var systemPrompt = BuildSystemPrompt(agent, rule);
 
         messages.Insert(0, new AiChatMessage { Role = "system", Content = systemPrompt });
@@ -626,7 +630,8 @@ public sealed class AiService : IDisposable
     private List<AiChatMessage> BuildContextMessages(
         AiTriggerRule rule,
         ReceivedChatMessage trigger,
-        string triggerText)
+        string triggerText,
+        string personaHint)
     {
         var config = _plugin.Config;
         var limit = Math.Clamp(config.AiContextMessageCount, 1, 100);
@@ -689,6 +694,9 @@ public sealed class AiService : IDisposable
                 $"The latest message from {senderLabel} in {channelLabel} is: \"{triggerText}\".\n" +
                 $"Reply now as {playerName}. Output ONLY the chat message.",
         };
+
+        if (!string.IsNullOrEmpty(personaHint))
+            task = $"[Stay in character] {personaHint}\n{task}";
 
         messages.Add(new AiChatMessage { Role = "user", Content = task });
         return messages;
@@ -766,6 +774,10 @@ public sealed class AiService : IDisposable
 
         var model = string.IsNullOrWhiteSpace(agent.Model) ? config.AiDefaultModel : agent.Model;
         var (contextText, contextCount) = BuildChannelContext(contextScopes);
+        var personaHint = GetPersonaHint(agent);
+        _log.Info(
+            $"[AI] Manual chat: agent='{agent.Name}', systemPrompt={agent.SystemPrompt.Length} chars, " +
+            $"model='{model}', context={contextCount}.");
         _log.Debug(
             $"[AI] Manual chat context: {contextCount} message(s) from " +
             $"[{string.Join(", ", contextScopes)}].");
@@ -797,7 +809,7 @@ public sealed class AiService : IDisposable
         messages.Add(new AiChatMessage
         {
             Role = "user",
-            Content = ComposeChatUserMessage(userMessage.Trim(), contextText),
+            Content = ComposeChatUserMessage(userMessage.Trim(), contextText, personaHint),
         });
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -952,25 +964,61 @@ public sealed class AiService : IDisposable
             .ToList();
     }
 
-    private static string ComposeChatUserMessage(string userMessage, string context)
+    private static string ComposeChatUserMessage(
+        string userMessage,
+        string context,
+        string personaHint)
     {
-        if (string.IsNullOrEmpty(context))
+        var builder = new StringBuilder();
+
+        if (!string.IsNullOrEmpty(personaHint))
         {
-            return "No recent in-game chat messages are available as context. " +
-                   "Answer the question below; if it depends on missing chat context, say so instead of guessing.\n\n" +
-                   userMessage;
+            builder.AppendLine($"[Stay in character] {personaHint}");
+            builder.AppendLine(
+                "Maintain this identity and tone. Do not identify as an engineering assistant, " +
+                "AI, or language model.");
+            builder.AppendLine();
         }
 
-        var builder = new StringBuilder();
-        builder.AppendLine("Recent in-game chat transcript (oldest to newest), for reference only:");
-        builder.AppendLine(context);
-        builder.AppendLine();
-        builder.AppendLine(
-            "Answer the question below using the transcript when relevant. " +
-            "If the transcript does not contain the answer, say so instead of guessing.");
-        builder.AppendLine();
+        if (string.IsNullOrEmpty(context))
+        {
+            builder.AppendLine(
+                "No recent in-game chat messages are available as context. " +
+                "Answer the question below; if it depends on missing chat context, say so instead of guessing.");
+            builder.AppendLine();
+        }
+        else
+        {
+            builder.AppendLine("Recent in-game chat transcript (oldest to newest), for reference only:");
+            builder.AppendLine(context);
+            builder.AppendLine();
+            builder.AppendLine(
+                "Answer the question below using the transcript when relevant. " +
+                "If the transcript does not contain the answer, say so instead of guessing.");
+            builder.AppendLine();
+        }
+
         builder.Append(userMessage);
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// The first non-empty line of the agent prompt, repeated in the user turn
+    /// so providers that ignore system messages still get the identity.
+    /// </summary>
+    private static string GetPersonaHint(AiAgentConfig agent)
+    {
+        if (string.IsNullOrWhiteSpace(agent.SystemPrompt))
+            return "";
+
+        var firstLine = agent.SystemPrompt
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault();
+
+        if (string.IsNullOrWhiteSpace(firstLine))
+            return "";
+
+        return firstLine.Length <= 240 ? firstLine : firstLine[..240];
     }
 
     private string GetPlayerName() =>

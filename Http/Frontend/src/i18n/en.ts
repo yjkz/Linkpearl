@@ -380,7 +380,7 @@ export const en = {
   'ai.addAgent': 'Add Agent',
   'ai.removeAgent': 'Remove Agent',
   'ai.preset.placeholder': 'Add a built-in preset…',
-  'ai.preset.hint': 'Choose a preset, then adjust it freely after adding.',
+  'ai.preset.hint': 'Choose a preset, then select it in the Chat tab.',
   'ai.agentName': 'Name',
   'ai.agentModel': 'Model override',
   'ai.agentTemperature': 'Temperature',

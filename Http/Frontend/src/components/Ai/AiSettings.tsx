@@ -438,7 +438,9 @@ export function AiSettings() {
                 </div>
 
                 <label className={styles.field}>
-                  <span className={styles.fieldLabel}>{t('ai.agentPrompt')}</span>
+                  <span className={styles.fieldLabel}>
+                    {t('ai.agentPrompt')} · {currentAgent.systemPrompt.length}
+                  </span>
                   <textarea
                     className={styles.textarea}
                     rows={5}

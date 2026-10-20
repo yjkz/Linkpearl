@@ -457,8 +457,9 @@ public sealed class AiWindow : Window
             if (ImGui.InputInt(T("ai.agent.maxTokens"), ref maxTokens))
                 agent.MaxTokens = Math.Clamp(maxTokens, 1, 4096);
 
+            ImGui.TextColored(ColorMuted, $"{T("ai.agent.systemPrompt")} ({agent.SystemPrompt.Length})");
             var systemPrompt = agent.SystemPrompt;
-            if (ImGui.InputTextMultiline(T("ai.agent.systemPrompt"), ref systemPrompt, 8192, new Vector2(-1, 120)))
+            if (ImGui.InputTextMultiline("##agent-system-prompt", ref systemPrompt, 8192, new Vector2(-1, 120)))
                 agent.SystemPrompt = systemPrompt;
         }
 
@@ -468,6 +469,7 @@ public sealed class AiWindow : Window
             {
                 _editAgents.Add(AiAgentPresets.CreateAgent(preset, _editAgents));
                 _selectedAgent = _editAgents.Count - 1;
+                _chatAgentIndex = _selectedAgent;
             }
             ImGui.SameLine();
         }
@@ -482,6 +484,7 @@ public sealed class AiWindow : Window
                 MaxTokens = 300,
             });
             _selectedAgent = _editAgents.Count - 1;
+            _chatAgentIndex = _selectedAgent;
         }
 
         ImGui.SameLine();
