@@ -462,6 +462,16 @@ public sealed class AiWindow : Window
                 agent.SystemPrompt = systemPrompt;
         }
 
+        foreach (var preset in AiAgentPresets.All)
+        {
+            if (ImGui.Button($"{T("ai.preset.add")}「{preset.Name}」##preset-{preset.Id}"))
+            {
+                _editAgents.Add(AiAgentPresets.CreateAgent(preset, _editAgents));
+                _selectedAgent = _editAgents.Count - 1;
+            }
+            ImGui.SameLine();
+        }
+
         if (ImGui.Button(T("ai.agent.add")))
         {
             _editAgents.Add(new AiAgentConfig

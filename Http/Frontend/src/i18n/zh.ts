@@ -365,6 +365,8 @@ export const zh: Record<TranslationKey, string> = {
   'ai.section.agents': 'Agent 配置',
   'ai.addAgent': '新增 Agent',
   'ai.removeAgent': '删除 Agent',
+  'ai.preset.placeholder': '添加内置预设…',
+  'ai.preset.hint': '选择一个预设，添加后仍可自由修改。',
   'ai.agentName': '名称',
   'ai.agentModel': '模型覆盖',
   'ai.agentTemperature': '温度',

@@ -5,6 +5,7 @@ import { useAiDataLoader } from '../../hooks/useAi';
 import { useTranslation, type TranslationKey } from '../../i18n';
 import type {
   AiAgent,
+  AiAgentPreset,
   AiRule,
   AiSettings,
   AiSettingsUpdate,
@@ -183,6 +184,25 @@ export function AiSettings() {
     setSelectedAgent(draft.agents.length);
   };
 
+  const handleAddPreset = (preset: AiAgentPreset) => {
+    const used = new Set(draft.agents.map((agent) => agent.name.toLowerCase()));
+    let name = preset.name;
+    let suffix = 2;
+    while (used.has(name.toLowerCase())) name = `${preset.name} ${suffix++}`;
+
+    const agent: AiAgent = {
+      id: `agent_${Date.now()}_${draft.agents.length}`,
+      name,
+      systemPrompt: preset.systemPrompt,
+      model: '',
+      temperature: preset.temperature,
+      maxTokens: preset.maxTokens,
+    };
+
+    update({ agents: [...draft.agents, agent] });
+    setSelectedAgent(draft.agents.length);
+  };
+
   const handleRemoveAgent = () => {
     if (draft.agents.length <= 1) return;
     const remaining = draft.agents.filter((_, i) => i !== selectedAgent);
@@ -211,6 +231,7 @@ export function AiSettings() {
     setSelectedRule(Math.min(selectedRule, Math.max(0, remaining.length - 1)));
   };
 
+  const presets = settings?.presets ?? [];
   const currentAgent = draft.agents[Math.min(selectedAgent, draft.agents.length - 1)];
   const currentRule = draft.rules[Math.min(selectedRule, draft.rules.length - 1)];
 
@@ -341,6 +362,27 @@ export function AiSettings() {
                 {t('ai.removeAgent')}
               </button>
             </div>
+
+            {presets.length > 0 && (
+              <div className={styles.listHeader}>
+                <select
+                  className="form-select"
+                  value=""
+                  onChange={(e) => {
+                    const preset = presets.find((item) => item.id === e.target.value);
+                    if (preset) handleAddPreset(preset);
+                  }}
+                >
+                  <option value="">{t('ai.preset.placeholder')}</option>
+                  {presets.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="form-hint">{t('ai.preset.hint')}</span>
+              </div>
+            )}
 
             {currentAgent && (
               <div className={styles.editor}>

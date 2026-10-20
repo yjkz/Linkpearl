@@ -63,6 +63,15 @@ internal class AiHandler
                 maxPerMinute = r.MaxPerMinute,
                 optionsCount = r.OptionsCount,
             }),
+            presets = Ai.AiAgentPresets.All.Select(p => new
+            {
+                id = p.Id,
+                name = p.Name,
+                description = p.Description,
+                systemPrompt = p.SystemPrompt,
+                temperature = p.Temperature,
+                maxTokens = p.MaxTokens,
+            }),
         };
 
         await SendJson(ctx, JsonSerializer.Serialize(response, JsonOptions));

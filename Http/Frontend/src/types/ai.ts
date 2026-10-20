@@ -51,6 +51,16 @@ export interface AiSettings {
   timeoutSeconds: number;
   agents: AiAgent[];
   rules: AiRule[];
+  presets?: AiAgentPreset[];
+}
+
+export interface AiAgentPreset {
+  id: string;
+  name: string;
+  description?: string;
+  systemPrompt: string;
+  temperature: number;
+  maxTokens: number;
 }
 
 export interface AiSettingsUpdate {
